@@ -1,0 +1,13 @@
+{
+  "name": "fannithm-editor-core-pjsk",
+  "description": "Editor core for fannithm editor pjsk part",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "GPL-3.0",
+  "author": "Qing Fu <zz5840@qq.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Fannithm/Editor-Core-PJSK.git"
+  },
+  "private": false
+}
