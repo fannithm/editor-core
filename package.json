@@ -39,7 +39,7 @@
     "pixi.js": "^6.0.4"
   },
   "dependencies": {
-    "@fannithm/const": "../const/",
+    "@fannithm/const": "^0.1.0-snapshot.4",
     "bezier-easing": "^2.1.0",
     "pixi.js": "^6.0.4"
   }
