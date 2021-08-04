@@ -15,7 +15,7 @@
     "build:preview": "rollup -c .build/rollup.config.prev.js"
   },
   "devDependencies": {
-    "@fannithm/sus-fannithm-convertor": "^1.1.1",
+    "@fannithm/sus-fannithm-convertor": "^1.1.2",
     "@rollup/plugin-commonjs": "^19.0.2",
     "@rollup/plugin-eslint": "^8.0.1",
     "@rollup/plugin-node-resolve": "^13.0.4",
