@@ -1,0 +1,11 @@
+{
+	"include": [
+		"src",
+		"node_modules/@fannithm/const/src"
+	],
+	"compilerOptions": {
+		"moduleResolution": "node",
+		"target": "ES2021",
+		"allowSyntheticDefaultImports": true
+	}
+}

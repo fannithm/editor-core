@@ -1,7 +1,7 @@
 {
   "name": "fannithm-editor-core-pjsk",
   "description": "Editor core for fannithm editor pjsk part",
-  "version": "0.1.0",
+  "version": "0.1.0-snapshot.1",
   "main": "index.js",
   "license": "GPL-3.0",
   "author": "Qing Fu <zz5840@qq.com>",
@@ -9,5 +9,38 @@
     "type": "git",
     "url": "https://github.com/Fannithm/Editor-Core-PJSK.git"
   },
-  "private": false
+  "private": false,
+  "scripts": {
+    "dev": "rollup -wc",
+    "build:preview": "rollup -c .build/rollup.config.prev.js"
+  },
+  "devDependencies": {
+    "@fannithm/sus-fannithm-convertor": "^1.1.1",
+    "@rollup/plugin-commonjs": "^19.0.2",
+    "@rollup/plugin-eslint": "^8.0.1",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "@rollup/plugin-typescript": "^8.2.3",
+    "@typescript-eslint/eslint-plugin": "^4.28.5",
+    "@typescript-eslint/parser": "^4.28.5",
+    "@zz5840/rollup-plugin-sprite": "^0.1.2",
+    "eslint": "^7.32.0",
+    "postcss": "^8.3.6",
+    "rollup": "^2.54.0",
+    "rollup-plugin-filesize": "^9.1.1",
+    "rollup-plugin-html2": "^3.0.1",
+    "rollup-plugin-livereload": "^2.0.5",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-serve": "^1.1.0",
+    "rollup-plugin-uglify": "^6.0.4",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.5"
+  },
+  "peerDependencies": {
+    "pixi.js": "^6.0.4"
+  },
+  "dependencies": {
+    "@fannithm/const": "../const/",
+    "bezier-easing": "^2.1.0",
+    "pixi.js": "^6.0.4"
+  }
 }
