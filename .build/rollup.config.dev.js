@@ -6,6 +6,7 @@ import serve from 'rollup-plugin-serve';
 import html2 from 'rollup-plugin-html2'
 import spritesmith from "@zz5840/rollup-plugin-sprite";
 import livereload from 'rollup-plugin-livereload';
+import postcss from 'rollup-plugin-postcss';
 
 export default {
 	input: 'src/index.ts',
@@ -50,6 +51,7 @@ export default {
 				padding: 4
 			}
 		}),
+		postcss(),
 		eslint(),
 		typescript(),
 		serve({

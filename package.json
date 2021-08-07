@@ -11,7 +11,7 @@
   },
   "private": false,
   "scripts": {
-    "dev": "rollup -wc",
+    "dev": "rollup -wc .build/rollup.config.dev.js",
     "build:preview": "rollup -c .build/rollup.config.prev.js"
   },
   "devDependencies": {

@@ -357,7 +357,7 @@ export default class PJSKMapDraw {
 		if (bezier) {
 			let from = [this.getLaneX(note.lane + 0.1), this.getYInCanvas(height)];
 			let to = [this.getLaneX(next.lane + 0.1), this.getYInCanvas(nextHeight)];
-			curve.beginFill(critical ? this.colors.critical : this.colors.slide);
+			curve.beginFill(critical ? this.colors.critical : this.colors.slide, .8);
 			curve.moveTo(from[0], from[1]);
 			curve.bezierCurveTo(
 				from[0] + bezier[0] * (to[0] - from[0]),
@@ -425,12 +425,13 @@ export default class PJSKMapDraw {
 			const height = this.getHeightByBeat(note.beat);
 			if (height >= this.scrollBottom - this.const.noteHeight &&
 				height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
+				const progress = (height - fromHeight) / (toHeight - fromHeight);
 				this.drawVisibleNote({
 					id: note.id,
 					type: PJSK.NoteType.SlideVisible,
 					beat: note.beat,
-					width: start.width,
-					lane: start.lane + (end.lane - start.lane) * easing((height - fromHeight) / (toHeight - fromHeight)),
+					width: start.width + (end.width - start.width) * easing(progress),
+					lane: start.lane + (end.lane - start.lane) * easing(progress),
 				}, height, slide.critical);
 			}
 			else if (height > this.scrollBottom + this.const.height + this.const.noteHeight) break;
