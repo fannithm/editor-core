@@ -26,7 +26,7 @@ import './style.css'
 				mapDraw.destroy();
 				mapDraw = null;
 			}
-			mapDraw = new PJSKMapDraw(document.getElementById('app'), map, 2);
+			mapDraw = new PJSKMapDraw(document.getElementById('app'), map, 180);
 			mapDraw.event.addEventListener('scroll', (event: CustomEvent) => {
 				$bottom.value = event.detail.scrollBottom;
 			});
