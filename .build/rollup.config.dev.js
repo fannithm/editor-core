@@ -32,8 +32,7 @@ export default {
 			template: 'src/index.html',
 			externals: {
 				before: [
-					{ tag: 'script', src: 'https://unpkg.com/pixi.js@6.0.4/dist/browser/pixi.js' },
-					{ tag: 'link', href: `style.css` }
+					{ tag: 'script', src: 'https://unpkg.com/pixi.js@6.0.4/dist/browser/pixi.js' }
 				]
 			}
 		}),

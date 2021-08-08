@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
-import { PJSK } from '@fannithm/const';
+import { PJSK, UUID } from '@fannithm/const';
 import bezierEasing from 'bezier-easing';
+import SingleNote from './notes/TapNote';
 
 /**
  * ## Usage
@@ -27,6 +28,7 @@ export class PJSKMapEditor {
 		note: PIXI.Container;
 		slide: PIXI.Container;
 		arrow: PIXI.Container;
+		selection: PIXI.Container;
 	};
 	private notes: {
 		[key: string]: PIXI.Texture;
@@ -57,12 +59,19 @@ export class PJSKMapEditor {
 		slide: 0xd9faef,
 		slideNote: 0x30e5a8,
 		critical: 0xfcf9cd,
-		criticalNote: 0xf1e41d
+		criticalNote: 0xf1e41d,
+		selection: 0x0390fc
 	};
 	private beatLine = {
 		third: false,
 		half: true,
 		quarter: true
+	};
+	private selection: {
+		single: UUID[],
+		slide: {
+			[key: string]: UUID[]
+		}
 	};
 	/**
 	 * See [EventTarget](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) on MDN for usage.
@@ -108,7 +117,8 @@ export class PJSKMapEditor {
 			time: new PIXI.Container(),
 			note: new PIXI.Container(),
 			slide: new PIXI.Container(),
-			arrow: new PIXI.Container()
+			arrow: new PIXI.Container(),
+			selection: new PIXI.Container()
 		};
 		this.scrollBottom /= resolution;
 		this.app.view.style.width = width + 'px';
@@ -119,6 +129,10 @@ export class PJSKMapEditor {
 		this.container.lane.name = 'Lane';
 		this.notes = PIXI.Loader.shared.resources['images/sprite.json'].textures;
 		this.event = new EventTarget();
+		this.selection = {
+			single: [],
+			slide: {}
+		};
 		this.start();
 	}
 
@@ -154,22 +168,29 @@ export class PJSKMapEditor {
 		this.container.arrow.destroy({
 			children: true
 		});
+		this.container.selection.destroy({
+			children: true
+		});
 		this.container.time = new PIXI.Container();
 		this.container.note = new PIXI.Container();
 		this.container.slide = new PIXI.Container();
 		this.container.arrow = new PIXI.Container();
+		this.container.selection = new PIXI.Container();
 		this.container.time.name = 'Time';
 		this.container.note.name = 'Note';
 		this.container.slide.name = 'Slide';
 		this.container.arrow.name = 'Arrow';
+		this.container.selection.name = 'Selection';
 		this.container.time.zIndex = 5;
 		this.container.arrow.zIndex = 7;
 		this.container.slide.zIndex = 8;
-		this.container.note.zIndex = 10;
+		this.container.note.zIndex = 9;
+		this.container.selection.zIndex = 10;
 		this.app.stage.addChild(this.container.time);
 		this.app.stage.addChild(this.container.note);
 		this.app.stage.addChild(this.container.slide);
 		this.app.stage.addChild(this.container.arrow);
+		this.app.stage.addChild(this.container.selection);
 		this.drawBeat();
 		this.drawBPM();
 		this.drawNote();
@@ -338,16 +359,26 @@ export class PJSKMapEditor {
 		return new PIXI.NineSlicePlane(texture, 91, 0, 91, 0);
 	}
 
-	private drawBaseNote(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, name: string, height: number): void {
-		const tap = this.nineSliceNote(this.notes[name]);
-		tap.name = `Note-${name}-${note.id}`;
-		const scale = this.const.noteHeight / tap.height;
-		tap.scale.set(scale);
-		tap.x = this.getLaneX(note.lane) - 0.1 * 0.06 * this.const.width;
-		tap.y = this.getYInCanvas(height) - this.const.noteHeight / 2;
-		tap.width = (note.width + 0.2) * 0.06 * this.const.width / scale;
-		tap.interactive = true;
-		this.container.note.addChild(tap);
+	private drawBaseNote(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, single: boolean, name: string, height: number): void {
+		const base = single ? new SingleNote(this.notes[name], note as PJSK.INoteTap) : this.nineSliceNote(this.notes[name]);
+		base.name = `Note-${name}-${note.id}`;
+		const scale = this.const.noteHeight / base.height;
+		base.scale.set(scale);
+		base.x = this.getLaneX(note.lane) - 0.1 * 0.06 * this.const.width;
+		base.y = this.getYInCanvas(height) - this.const.noteHeight / 2;
+		base.width = (note.width + 0.2) * 0.06 * this.const.width / scale;
+		base.on('click', this.singleClickHandler.bind(this));
+		this.container.note.addChild(base);
+	}
+
+	private singleClickHandler(event: PIXI.InteractionEvent) {
+		const id = (event.target as SingleNote).id;
+		if (event.data.originalEvent.ctrlKey) {
+			const index = this.selection.single.indexOf(id)
+			if (index === -1) this.selection.single.push(id);
+			else this.selection.single.splice(index, 1);
+		} else this.selection.single = [id];
+		this.reRender();
 	}
 
 	private drawFlickArrow(note: PJSK.INoteFlick | PJSK.INoteSlideEndFlick, height: number): void {
@@ -487,10 +518,10 @@ export class PJSKMapEditor {
 				if (height >= this.scrollBottom - this.const.noteHeight &&
 					height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
 					if ([PJSK.NoteType.SlideStart, PJSK.NoteType.SlideEndDefault].includes(note.type)) {
-						this.drawBaseNote(note, slide.critical ? 'critical' : 'slide', height);
+						this.drawBaseNote(note, false, slide.critical ? 'critical' : 'slide', height);
 					}
 					else if (note.type === PJSK.NoteType.SlideEndFlick) {
-						this.drawBaseNote(note, (note.critical || slide.critical) ? 'critical' : 'flick', height);
+						this.drawBaseNote(note, false, (note.critical || slide.critical) ? 'critical' : 'flick', height);
 						this.drawFlickArrow({
 							...note,
 							critical: note?.critical || slide.critical
@@ -505,18 +536,27 @@ export class PJSKMapEditor {
 		}
 	}
 
+	private drawSingleSelection(note: PJSK.INoteTap | PJSK.INoteFlick, height: number) {
+		const rect = new PIXI.Graphics();
+		rect.lineStyle(this.const.lineWidth * 4, this.colors.selection);
+		rect.drawRect(this.getLaneX(note.lane) - this.const.paddingX, this.getYInCanvas(height) - this.const.noteHeight / 2, 0.06 * this.const.width * note.width + this.const.paddingX * 2, this.const.noteHeight);
+		this.container.note.addChild(rect);
+	}
+
 	private drawNote(): void {
 		for (let i = 0; i < this.map.notes.length; i++) {
 			const note = this.map.notes[i];
 			const height = this.getHeightByBeat(note.beat);
 			if (height >= this.scrollBottom - this.const.noteHeight && height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
-				if (note.type) this.drawFlickArrow(note, height);
-				this.drawBaseNote(note, note.critical ? 'critical' : (note.type ? 'flick' : 'tap'), height);
+				if (note.type === PJSK.NoteType.Flick) this.drawFlickArrow(note, height);
+				this.drawBaseNote(note, true, note.critical ? 'critical' : (note.type ? 'flick' : 'tap'), height);
+				if (this.selection.single.includes(note.id)) {
+					this.drawSingleSelection(note, height);
+				}
 			}
 			if (height > this.scrollBottom + this.const.height + this.const.noteHeight) break;
 		}
 	}
-
 
 	setMap(map: PJSK.IMap): void {
 		this.map = map;
