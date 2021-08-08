@@ -6,6 +6,22 @@
 	"compilerOptions": {
 		"moduleResolution": "node",
 		"target": "ES2021",
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"paths": {
+			"mini-signals": [
+				"./node_modules/resource-loader/typings/mini-signals.d.ts"
+			]
+		}
+	},
+	"typedocOptions": {
+		"entryPoints": [
+			"src/index.ts",
+			"node_modules/@fannithm/const/src/index.ts"
+		],
+		"name": "Fannithm Editor Core Documentation",
+		"includeVersion": true,
+		"excludePrivate": true,
+		"excludeProtected": true,
+		"out": "dist/docs"
 	}
 }

@@ -9,7 +9,7 @@ import filesize from 'rollup-plugin-filesize';
 import { uglify } from "rollup-plugin-uglify";
 
 export default {
-	input: 'src/index.ts',
+	input: 'src/test.ts',
 	output: {
 		dir: 'dist',
 		entryFileNames: "bundle-[hash].js",

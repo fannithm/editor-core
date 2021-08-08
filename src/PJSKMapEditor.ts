@@ -2,7 +2,22 @@ import * as PIXI from 'pixi.js';
 import { PJSK } from '@fannithm/const';
 import bezierEasing from 'bezier-easing';
 
-export default class PJSKMapDraw {
+/**
+ * ## Usage
+ * ### Load resource first
+ * See {@link PJSKMapEditor.loadResource}
+ * ```js
+ * await PJSKMapEditor.loadResource((loader, resource) => {
+ * 	console.log(`${loader.progress}% loading: ${resource.url}`);
+ * });
+ * ```
+ * ### Initialize
+ * See {@link PJSKMapEditor.constructor}
+ * ```js
+ * const editor = new PJSKMapEditor(document.getElementById("container"), map, time);
+ * ```
+ */
+export class PJSKMapEditor {
 	private app: PIXI.Application;
 	private map: PJSK.IMap;
 	private resolution: number;
@@ -49,8 +64,18 @@ export default class PJSKMapDraw {
 		half: true,
 		quarter: true
 	};
+	/**
+	 * See [EventTarget](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) on MDN for usage.
+	 *
+	 * See {@link PJSKEventType} for all events.
+	 */
 	public event: EventTarget;
 
+	/**
+	 * @param container Editor container for containing canvas element.
+	 * @param map Map json, see [map format](https://www.notion.so/File-Format-525cf5eb690d49c2a88ebcb7bd3faf46#1516081e92a34b51b020b4c040377693) for detail.
+	 * @param time Map total time, used to calculate editor max height.
+	 */
 	constructor(container: HTMLElement, map: PJSK.IMap, time: number) {
 		const { width, height } = container.getBoundingClientRect();
 		const resolution = window.devicePixelRatio;
@@ -158,16 +183,16 @@ export default class PJSKMapDraw {
 	}
 
 	static loadResource(
-		onLoad: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void,
-		onError: (err: Error, loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void): Promise<void> {
+		onLoad?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void,
+		onError?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void): Promise<void> {
 		return new Promise<void>(resolve => {
 			const loader = PIXI.Loader.shared;
 			loader.add("images/sprite.json").load(() => {
 				console.log('load resources completed');
 				resolve();
 			});
-			loader.onLoad.add(onLoad);
-			loader.onError.add(onError);
+			onLoad && loader.onLoad.add(onLoad);
+			onError && loader.onError.add(onError);
 		});
 	}
 
@@ -505,3 +530,30 @@ export default class PJSKMapDraw {
 	}
 }
 
+/**
+ * PJSKEventType enumeration
+ */
+export enum PJSKEventType {
+	/**
+	 * ## Usage:
+	 * ```js
+	 * editor.event.addEventListener(PJSKEventType.SCROLL, (event: PJSKScrollEvent) => {
+	 * 	console.log(event.detail.scrollBottom)
+	 * })
+	 * ```
+	 * See {@link PJSKScrollEvent.detail}
+	 * @event scroll
+	 */
+	SCROLL = 'scroll'
+}
+
+export interface PJSKScrollEvent extends CustomEvent<PJSKScrollEventDetail> {
+	readonly detail: PJSKScrollEventDetail
+}
+
+export interface PJSKScrollEventDetail {
+	/**
+	 * The scroll bottom of the editor.
+	 */
+	scrollBottom: number
+}

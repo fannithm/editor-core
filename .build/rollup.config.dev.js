@@ -9,7 +9,7 @@ import livereload from 'rollup-plugin-livereload';
 import postcss from 'rollup-plugin-postcss';
 
 export default {
-	input: 'src/index.ts',
+	input: 'src/test.ts',
 	watch: {
 		include: 'src/**/*'
 	},
