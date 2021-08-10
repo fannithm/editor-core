@@ -8,6 +8,10 @@ html, body {
 	height: 100%;
 }
 
+body {
+	user-select: none;
+}
+
 #selector {
 	height: 40px;
 	position: relative;

@@ -49,6 +49,7 @@ export class PJSKMapEditor {
 		maxHeight: number
 	};
 	private colors = {
+		background: 0xffffff,
 		lane: 0x000000,
 		bpm: 0x00ffff,
 		beat: {
@@ -73,6 +74,9 @@ export class PJSKMapEditor {
 			[key: string]: UUID[]
 		}
 	};
+	private selectionBox: number[];
+	private scrollTicker: PIXI.Ticker;
+	private autoScrollDelta: number;
 	/**
 	 * See [EventTarget](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) on MDN for usage.
 	 *
@@ -126,6 +130,7 @@ export class PJSKMapEditor {
 		container.appendChild(this.app.view);
 		this.app.stage.addChild(this.container.lane);
 		this.app.stage.sortableChildren = true;
+		this.app.stage.interactive = true;
 		this.container.lane.name = 'Lane';
 		this.notes = PIXI.Loader.shared.resources['images/sprite.json'].textures;
 		this.event = new EventTarget();
@@ -133,24 +138,93 @@ export class PJSKMapEditor {
 			single: [],
 			slide: {}
 		};
+		this.selectionBox = [0, 0, 0, 0];
+		this.scrollTicker = new PIXI.Ticker();
+		this.scrollTicker.autoStart = false;
+		this.scrollTicker.add(this.scrollTickerHandler.bind(this));
 		this.start();
 	}
 
-	start(): void {
+	private start(): void {
+		const selectArea = new PIXI.Graphics();
+		selectArea.name = 'SelectArea';
+		selectArea.beginFill(this.colors.background, 0.5);
+		selectArea.drawRect(0, 0, this.const.width, this.const.height);
+		selectArea.zIndex = -1;
+		selectArea.interactive = true;
+		selectArea.endFill();
+		this.app.stage.addChild(selectArea);
+
 		this.drawLane();
 		this.reRender();
 		this.app.view.addEventListener('wheel', (event) => {
 			const scrollBottom = Math.min(this.const.maxHeight, Math.max(0, this.scrollBottom - event.deltaY / this.resolution));
 			this.scrollTo(scrollBottom);
 		});
+		const selectAreaMoveHandler = this.selectAreaMoveHandler.bind(this);
+		const selectAndScrollHandler = this.selectAndScrollHandler.bind(this)
+		selectArea.on('mousedown', (event: PIXI.InteractionEvent) => {
+			if (!event.data.originalEvent.ctrlKey) {
+				this.selection = {
+					single: [],
+					slide: {}
+				}
+			}
+			const point = event.data.global;
+			const x = point.x;
+			const y = this.scrollBottom + (this.const.height - point.y);
+			this.selectionBox = [x, y, x, y];
+			selectArea.on('mousemove', selectAreaMoveHandler);
+			this.event.addEventListener(PJSKEventType.SCROLL, selectAndScrollHandler);
+			this.reRender();
+		});
+		window.addEventListener('mouseup', () => {
+			this.selectionBox = [0, 0, 0, 0];
+			selectArea.removeListener('mousemove', selectAreaMoveHandler);
+			this.event.removeEventListener(PJSKEventType.SCROLL, selectAndScrollHandler);
+			this.autoScrollDelta = 0;
+			this.scrollTicker.stop();
+			this.reRender();
+		});
+	}
+
+	private selectAreaMoveHandler(event: PIXI.InteractionEvent): void {
+		const point = event.data.global;
+		this.selectionBox[2] = point.x;
+		this.selectionBox[3] = this.scrollBottom + (this.const.height - point.y);
+		// auto scroll
+		const topScrollArea = this.const.height / 20;
+		const bottomScrollArea = this.const.height - topScrollArea;
+		if (point.y < topScrollArea || point.y > bottomScrollArea) {
+			if (!this.scrollTicker.started) this.scrollTicker.start();
+			this.autoScrollDelta = ((point.y < topScrollArea ? topScrollArea : bottomScrollArea) - point.y) / (topScrollArea / 10);
+		} else {
+			this.autoScrollDelta = 0;
+			this.scrollTicker.stop();
+		}
+		this.reRender();
+	}
+	/**
+	 * Emit when editor is scrolling and select box is visible
+	 * This function is used to update y of select box when scroll
+	 */
+	private selectAndScrollHandler(event: PJSKScrollEvent) {
+		this.selectionBox[3] += event.detail.scrollBottom - event.detail.oldScrollBottom;
+	}
+
+	private scrollTickerHandler(): void {
+		this.scrollTo(this.scrollBottom + this.autoScrollDelta);
 	}
 
 	scrollTo(height: number): void {
+		const detail = {
+			oldScrollBottom: this.scrollBottom,
+			scrollBottom: 0,
+		};
 		this.scrollBottom = Math.min(this.const.maxHeight, Math.max(0, height));
+		detail.scrollBottom = this.scrollBottom;
 		this.event.dispatchEvent(new CustomEvent('scroll', {
-			detail: {
-				scrollBottom: this.scrollBottom,
-			}
+			detail
 		}));
 		this.reRender();
 	}
@@ -195,6 +269,7 @@ export class PJSKMapEditor {
 		this.drawBPM();
 		this.drawNote();
 		this.drawSlide();
+		this.drawSelectionBox();
 	}
 
 	destroy(): void {
@@ -258,6 +333,20 @@ export class PJSKMapEditor {
 
 	private fractionToDecimal(frac: number[]): number {
 		return frac[0] + (frac[1] / frac[2]);
+	}
+
+	private drawSelectionBox() {
+		const box = this.selectionBox;
+		if (box[0] === box[2] || box[1] === box[3]) return;
+		const selectionBox = new PIXI.Graphics();
+		selectionBox.beginFill(this.colors.selection, 0.2);
+		selectionBox.lineStyle(this.const.lineWidth, this.colors.selection);
+		// TODO max width and max height out of box
+		const y = this.getYInCanvas(box[1]);
+		const height = this.getYInCanvas(box[3]) - y;
+		selectionBox.drawRect(box[0], y, box[2] - box[0], height);
+		selectionBox.endFill();
+		this.container.selection.addChild(selectionBox);
 	}
 
 	private drawBPM(): void {
@@ -592,6 +681,10 @@ export interface PJSKScrollEvent extends CustomEvent<PJSKScrollEventDetail> {
 }
 
 export interface PJSKScrollEventDetail {
+	/**
+	 * The scroll bottom before scroll
+	 */
+	oldScrollBottom: number;
 	/**
 	 * The scroll bottom of the editor.
 	 */
