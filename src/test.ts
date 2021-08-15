@@ -67,7 +67,7 @@ import './style.css';
 			mapEditor.event.addEventListener('scroll', (event: CustomEvent) => {
 				$bottom.value = event.detail.scrollBottom;
 			});
-			mapEditor.scrollTo(0);
+			mapEditor.scrollTo(50800);
 		});
 		$id.value = '135';
 		$load.click();

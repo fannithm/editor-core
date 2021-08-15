@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import { PJSK, UUID } from '@fannithm/const';
 import bezierEasing from 'bezier-easing';
 import SingleNote from './notes/TapNote';
+import SlideNote from './notes/SlideNote';
 
 /**
  * ## Usage
@@ -72,6 +73,10 @@ export class PJSKMapEditor {
 		single: UUID[],
 		slide: {
 			[key: string]: UUID[]
+		},
+		singleTemp: UUID[],
+		slideTemp: {
+			[key: string]: UUID[]
 		}
 	};
 	private time: number;
@@ -138,7 +143,9 @@ export class PJSKMapEditor {
 		this.event = new EventTarget();
 		this.selection = {
 			single: [],
-			slide: {}
+			slide: {},
+			singleTemp: [],
+			slideTemp: {}
 		};
 		this.selectionBox = [0, 0, 0, 0];
 		this.scrollTicker = new PIXI.Ticker();
@@ -167,10 +174,7 @@ export class PJSKMapEditor {
 		const selectAndScrollHandler = this.selectAndScrollHandler.bind(this)
 		selectArea.on('mousedown', (event: PIXI.InteractionEvent) => {
 			if (!event.data.originalEvent.ctrlKey) {
-				this.selection = {
-					single: [],
-					slide: {}
-				}
+				this.emptySelection();
 			}
 			const point = event.data.global;
 			const x = point.x;
@@ -186,6 +190,17 @@ export class PJSKMapEditor {
 			this.event.removeEventListener(PJSKEventType.SCROLL, selectAndScrollHandler);
 			this.autoScrollDelta = 0;
 			this.scrollTicker.stop();
+			// move temp selection to selection
+			this.selection.single.push(...this.selection.singleTemp);
+			for (const id in this.selection.slideTemp) {
+				if (Object.prototype.hasOwnProperty.call(this.selection.slideTemp, id)) {
+					const slide = this.selection.slideTemp[id];
+					if (!this.selection.slide[id]) this.selection.slide[id] = [];
+					this.selection.slide[id].push(...slide);
+				}
+			}
+			this.selection.singleTemp = [];
+			this.selection.slideTemp = {};
 			this.reRender();
 		});
 	}
@@ -204,6 +219,7 @@ export class PJSKMapEditor {
 			this.autoScrollDelta = 0;
 			this.scrollTicker.stop();
 		}
+		this.findSelectedNote();
 		this.reRender();
 	}
 	/**
@@ -212,6 +228,55 @@ export class PJSKMapEditor {
 	 */
 	private selectAndScrollHandler(event: PJSKScrollEvent) {
 		this.selectionBox[3] += event.detail.scrollBottom - event.detail.oldScrollBottom;
+		this.findSelectedNote();
+	}
+
+	/**
+	 * Add selected note to temp selection array
+	 */
+	private findSelectedNote() {
+		const startY = Math.min(this.selectionBox[1], this.selectionBox[3]);
+		const endY = Math.max(this.selectionBox[1], this.selectionBox[3]);
+		const startX = Math.min(this.selectionBox[0], this.selectionBox[2]);
+		const endX = Math.max(this.selectionBox[0], this.selectionBox[2]);
+
+		this.selection.singleTemp = [];
+		this.selection.slideTemp = {};
+
+		for (let i = 0; i < this.map.notes.length; i++) {
+			const note = this.map.notes[i];
+			const height = this.getHeightByBeat(note.beat);
+			const noteStartX = this.getLaneX(note.lane);
+			const noteEndX = this.getLaneX(note.lane + note.width);
+			if (height >= startY && height <= endY &&
+				noteStartX >= startX && noteEndX <= endX &&
+				!this.selection.single.includes(note.id)) {
+				this.selection.singleTemp.push(note.id);
+			} else if (height > endY) break;
+		}
+
+		for (let i = 0; i < this.map.slides.length; i++) {
+			const slide = this.map.slides[i];
+			for (let j = 0; j < slide.notes.length; j++) {
+				const note = slide.notes[j];
+				const height = this.getHeightByBeat(note.beat);
+				const noteStartX = this.getLaneX(note.lane);
+				const noteEndX = this.getLaneX(note.lane + note.width);
+				if (height >= startY && height <= endY &&
+					noteStartX >= startX && noteEndX <= endX &&
+					!this.selection.slide[slide.id]?.includes(note.id)) {
+					if (!this.selection.slideTemp[slide.id]) this.selection.slideTemp[slide.id] = [];
+					this.selection.slideTemp[slide.id].push(note.id);
+				}
+				else if (height > endY && j === 0) return;
+				else if (height > endY) break;
+			}
+		}
+	}
+
+	private emptySelection() {
+		this.selection.single = [];
+		this.selection.slide = {};
 	}
 
 	private scrollTickerHandler(): void {
@@ -446,29 +511,33 @@ export class PJSKMapEditor {
 		}
 	}
 
-	private nineSliceNote(texture: PIXI.Texture): PIXI.NineSlicePlane {
-		return new PIXI.NineSlicePlane(texture, 91, 0, 91, 0);
-	}
-
-	private drawBaseNote(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, single: boolean, name: string, height: number): void {
-		const base = single ? new SingleNote(this.notes[name], note as PJSK.INoteTap) : this.nineSliceNote(this.notes[name]);
+	private drawBaseNote(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, name: string, height: number, slide?: PJSK.INoteSlide): void {
+		const base = slide === undefined
+			? new SingleNote(this.notes[name], note as PJSK.INoteTap)
+			: new SlideNote(this.notes[name], note as PJSK.INoteSlideNote, slide);
 		base.name = `Note-${name}-${note.id}`;
 		const scale = this.const.noteHeight / base.height;
 		base.scale.set(scale);
 		base.x = this.getLaneX(note.lane) - 0.1 * 0.06 * this.const.width;
 		base.y = this.getYInCanvas(height) - this.const.noteHeight / 2;
 		base.width = (note.width + 0.2) * 0.06 * this.const.width / scale;
-		base.on('click', this.singleClickHandler.bind(this));
+		base.on('click', slide === undefined ? this.singleClickHandler.bind(this) : this.slideClickHandler.bind(this));
 		this.container.note.addChild(base);
 	}
 
 	private singleClickHandler(event: PIXI.InteractionEvent) {
 		const id = (event.target as SingleNote).id;
-		if (event.data.originalEvent.ctrlKey) {
-			const index = this.selection.single.indexOf(id)
-			if (index === -1) this.selection.single.push(id);
-			else this.selection.single.splice(index, 1);
-		} else this.selection.single = [id];
+		if (!event.data.originalEvent.ctrlKey) this.emptySelection();
+		this.selection.single.push(id);
+		this.reRender();
+	}
+
+	private slideClickHandler(event: PIXI.InteractionEvent) {
+		const id = (event.target as SlideNote).id;
+		const slideId = (event.target as SlideNote).slideId;
+		if (!event.data.originalEvent.ctrlKey) this.emptySelection();
+		if (!this.selection.slide[slideId]) this.selection.slide[slideId] = [];
+		this.selection.slide[slideId].push(id);
 		this.reRender();
 	}
 
@@ -606,32 +675,33 @@ export class PJSKMapEditor {
 					const nextHeight = this.getHeightByBeat(nextCurve.beat);
 					this.drawCurve(note, nextCurve, height, nextHeight, slide.critical);
 					if (next.lane === undefined) this.drawSkippedVisibleNote(slide, note, j + 1, nextCurveIndex);
+					// TODO select un-positioned node
 				}
 				if (height >= this.scrollBottom - this.const.noteHeight &&
 					height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
 					if ([PJSK.NoteType.SlideStart, PJSK.NoteType.SlideEndDefault].includes(note.type)) {
-						this.drawBaseNote(note, false, slide.critical ? 'critical' : 'slide', height);
+						this.drawBaseNote(note, slide.critical ? 'critical' : 'slide', height, slide);
 					}
 					else if (note.type === PJSK.NoteType.SlideEndFlick) {
-						this.drawBaseNote(note, false, (note.critical || slide.critical) ? 'critical' : 'flick', height);
+						this.drawBaseNote(note, (note.critical || slide.critical) ? 'critical' : 'flick', height, slide);
 						this.drawFlickArrow({
 							...note,
 							critical: note?.critical || slide.critical
 						}, height);
-					}
+					} // TODO select slide node when clicking
 					else if (note.type === PJSK.NoteType.SlideInvisible) this.drawInvisibleNote(note, height, slide.critical);
 					else if (note.type === PJSK.NoteType.SlideVisible) {
 						this.drawVisibleNote(note, height, slide.critical);
 					}
-					if (this.selection.slide[slide.id].includes(note.id)) {
-						console.log(123);
+					if (this.selection.slide[slide.id]?.includes(note.id) || this.selection.slideTemp[slide.id]?.includes(note.id)) {
+						this.drawSelectionRect(note, height);
 					}
 				}
 			}
 		}
 	}
 
-	private drawSingleSelection(note: PJSK.INoteTap | PJSK.INoteFlick, height: number) {
+	private drawSelectionRect(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, height: number) {
 		const rect = new PIXI.Graphics();
 		rect.lineStyle(this.const.lineWidth * 4, this.colors.selection);
 		rect.drawRect(this.getLaneX(note.lane) - this.const.paddingX, this.getYInCanvas(height) - this.const.noteHeight / 2, 0.06 * this.const.width * note.width + this.const.paddingX * 2, this.const.noteHeight);
@@ -644,9 +714,9 @@ export class PJSKMapEditor {
 			const height = this.getHeightByBeat(note.beat);
 			if (height >= this.scrollBottom - this.const.noteHeight && height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
 				if (note.type === PJSK.NoteType.Flick) this.drawFlickArrow(note, height);
-				this.drawBaseNote(note, true, note.critical ? 'critical' : (note.type ? 'flick' : 'tap'), height);
-				if (this.selection.single.includes(note.id)) {
-					this.drawSingleSelection(note, height);
+				this.drawBaseNote(note, note.critical ? 'critical' : (note.type ? 'flick' : 'tap'), height);
+				if (this.selection.single.includes(note.id) || this.selection.singleTemp.includes(note.id)) {
+					this.drawSelectionRect(note, height);
 				}
 			}
 			if (height > this.scrollBottom + this.const.height + this.const.noteHeight) break;
