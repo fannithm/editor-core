@@ -2,7 +2,7 @@
 
 ## Demo
 
-[PJSK Preview](https://pjsk-preview.fannithm.xyz)
+View demo on [PJSK Preview](https://pjsk-preview.fannithm.xyz).
 
 ## Installation
 

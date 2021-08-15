@@ -74,6 +74,7 @@ export class PJSKMapEditor {
 			[key: string]: UUID[]
 		}
 	};
+	private time: number;
 	private selectionBox: number[];
 	private scrollTicker: PIXI.Ticker;
 	private autoScrollDelta: number;
@@ -115,6 +116,7 @@ export class PJSKMapEditor {
 			arrowHeight: 32 / resolution,
 			maxHeight: 0
 		};
+		this.time = time;
 		this.const.maxHeight = this.const.heightPerSecond * time + this.const.spaceY * 2;
 		this.container = {
 			lane: new PIXI.Container(),
@@ -597,8 +599,9 @@ export class PJSKMapEditor {
 					nextCurveIndex = j + 1 + slide.notes.slice(j + 1).findIndex(v => v.lane !== undefined);
 					nextCurve = slide.notes[nextCurveIndex];
 				}
+				// draw un-positioned slide visible note
 				if (note.lane !== undefined && nextCurve &&
-					this.getHeightByBeat(note.beat) < this.scrollBottom + this.const.height + this.const.noteHeight &&
+					height < this.scrollBottom + this.const.height + this.const.noteHeight &&
 					this.getHeightByBeat(nextCurve.beat) > this.scrollBottom - this.const.noteHeight) {
 					const nextHeight = this.getHeightByBeat(nextCurve.beat);
 					this.drawCurve(note, nextCurve, height, nextHeight, slide.critical);
@@ -619,6 +622,9 @@ export class PJSKMapEditor {
 					else if (note.type === PJSK.NoteType.SlideInvisible) this.drawInvisibleNote(note, height, slide.critical);
 					else if (note.type === PJSK.NoteType.SlideVisible) {
 						this.drawVisibleNote(note, height, slide.critical);
+					}
+					if (this.selection.slide[slide.id].includes(note.id)) {
+						console.log(123);
 					}
 				}
 			}
@@ -656,6 +662,19 @@ export class PJSKMapEditor {
 			notes: v.notes.sort((a, b) => this.minusBeat(a.beat, b.beat))
 		})).sort((a, b) => this.minusBeat(a.notes[0].beat, b.notes[0].beat))
 		console.log(this.map);
+	}
+
+	getHeightPerSecond(): number {
+		return this.const.heightPerSecond * this.resolution;
+	}
+
+	setHeightPerSecond(heightPerSecond: number): void {
+		if (heightPerSecond < 800 || heightPerSecond > 12800) return;
+		this.scrollTo(this.scrollBottom * heightPerSecond / this.const.heightPerSecond);
+		this.const.heightPerSecond = heightPerSecond / this.resolution;
+		this.const.spaceY = this.const.heightPerSecond / 16;
+		this.const.maxHeight = this.const.heightPerSecond * this.time + this.const.spaceY * 2;
+		this.reRender();
 	}
 }
 
