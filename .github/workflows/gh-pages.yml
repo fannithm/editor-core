@@ -22,7 +22,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm config set '//npm.pkg.github.com/:_authToken' "${{ secrets.GITHUB_TOKEN }}"
       - run: yarn install
-      - run: yarn add pixi.js@6.0.4
       - run: yarn build:preview
       - run: yarn build:docs
       - name: Deploy
