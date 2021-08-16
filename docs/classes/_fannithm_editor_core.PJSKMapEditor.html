@@ -119,8 +119,14 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#destroy" class="tsd-kind-icon">destroy</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#getConst" class="tsd-kind-icon">get<wbr>Const</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#getCurrentTime" class="tsd-kind-icon">get<wbr>Current<wbr>Time</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#getHeightByBeat" class="tsd-kind-icon">get<wbr>Height<wbr>ByBeat</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#getHeightByTime" class="tsd-kind-icon">get<wbr>Height<wbr>ByTime</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#getHeightPerSecond" class="tsd-kind-icon">get<wbr>Height<wbr>Per<wbr>Second</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#getTimeByBeat" class="tsd-kind-icon">get<wbr>Time<wbr>ByBeat</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#scrollTo" class="tsd-kind-icon">scroll<wbr>To</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#setCurrentTime" class="tsd-kind-icon">set<wbr>Current<wbr>Time</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#setHeightPerSecond" class="tsd-kind-icon">set<wbr>Height<wbr>Per<wbr>Second</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_fannithm_editor_core.PJSKMapEditor.html#setMap" class="tsd-kind-icon">set<wbr>Map</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_fannithm_editor_core.PJSKMapEditor.html#loadResource" class="tsd-kind-icon">load<wbr>Resource</a></li>
@@ -141,7 +147,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L98">src/PJSKMapEditor.ts:98</a></li>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L100">src/PJSKMapEditor.ts:100</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -184,7 +190,7 @@
 					<div class="tsd-signature tsd-kind-icon">event<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">EventTarget</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L91">src/PJSKMapEditor.ts:91</a></li>
+							<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L93">src/PJSKMapEditor.ts:93</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -207,10 +213,96 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L342">src/PJSKMapEditor.ts:342</a></li>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L346">src/PJSKMapEditor.ts:346</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getConst" class="tsd-anchor"></a>
+					<h3>get<wbr>Const</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Const<span class="tsd-signature-symbol">(</span>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L779">src/PJSKMapEditor.ts:779</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>name: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getCurrentTime" class="tsd-anchor"></a>
+					<h3>get<wbr>Current<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Current<wbr>Time<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L770">src/PJSKMapEditor.ts:770</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getHeightByBeat" class="tsd-anchor"></a>
+					<h3>get<wbr>Height<wbr>ByBeat</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Height<wbr>ByBeat<span class="tsd-signature-symbol">(</span>beat<span class="tsd-signature-symbol">: </span><a href="../modules/node_modules__fannithm_const_src.PJSK.html#MapBeat" class="tsd-signature-type" data-tsd-kind="Type alias">MapBeat</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L385">src/PJSKMapEditor.ts:385</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>beat: <a href="../modules/node_modules__fannithm_const_src.PJSK.html#MapBeat" class="tsd-signature-type" data-tsd-kind="Type alias">MapBeat</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getHeightByTime" class="tsd-anchor"></a>
+					<h3>get<wbr>Height<wbr>ByTime</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Height<wbr>ByTime<span class="tsd-signature-symbol">(</span>time<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L389">src/PJSKMapEditor.ts:389</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>time: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -224,9 +316,32 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L737">src/PJSKMapEditor.ts:737</a></li>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L756">src/PJSKMapEditor.ts:756</a></li>
 								</ul>
 							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getTimeByBeat" class="tsd-anchor"></a>
+					<h3>get<wbr>Time<wbr>ByBeat</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Time<wbr>ByBeat<span class="tsd-signature-symbol">(</span>beat<span class="tsd-signature-symbol">: </span><a href="../modules/node_modules__fannithm_const_src.PJSK.html#MapBeat" class="tsd-signature-type" data-tsd-kind="Type alias">MapBeat</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L370">src/PJSKMapEditor.ts:370</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>beat: <a href="../modules/node_modules__fannithm_const_src.PJSK.html#MapBeat" class="tsd-signature-type" data-tsd-kind="Type alias">MapBeat</a></h5>
+								</li>
+							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
 						</li>
 					</ul>
@@ -241,13 +356,36 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L286">src/PJSKMapEditor.ts:286</a></li>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L289">src/PJSKMapEditor.ts:289</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>height: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="setCurrentTime" class="tsd-anchor"></a>
+					<h3>set<wbr>Current<wbr>Time</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">set<wbr>Current<wbr>Time<span class="tsd-signature-symbol">(</span>time<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L774">src/PJSKMapEditor.ts:774</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>time: <span class="tsd-signature-type">number</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -264,7 +402,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L741">src/PJSKMapEditor.ts:741</a></li>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L760">src/PJSKMapEditor.ts:760</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -287,7 +425,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L726">src/PJSKMapEditor.ts:726</a></li>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L745">src/PJSKMapEditor.ts:745</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -310,7 +448,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/db55f32/src/PJSKMapEditor.ts#L348">src/PJSKMapEditor.ts:348</a></li>
+									<li>Defined in <a href="https://github.com/fannithm/editor-core/blob/953aa35/src/PJSKMapEditor.ts#L352">src/PJSKMapEditor.ts:352</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -410,10 +548,28 @@
 								<a href="_fannithm_editor_core.PJSKMapEditor.html#destroy" class="tsd-kind-icon">destroy</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_fannithm_editor_core.PJSKMapEditor.html#getConst" class="tsd-kind-icon">get<wbr>Const</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_fannithm_editor_core.PJSKMapEditor.html#getCurrentTime" class="tsd-kind-icon">get<wbr>Current<wbr>Time</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_fannithm_editor_core.PJSKMapEditor.html#getHeightByBeat" class="tsd-kind-icon">get<wbr>Height<wbr>ByBeat</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_fannithm_editor_core.PJSKMapEditor.html#getHeightByTime" class="tsd-kind-icon">get<wbr>Height<wbr>ByTime</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_fannithm_editor_core.PJSKMapEditor.html#getHeightPerSecond" class="tsd-kind-icon">get<wbr>Height<wbr>Per<wbr>Second</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_fannithm_editor_core.PJSKMapEditor.html#getTimeByBeat" class="tsd-kind-icon">get<wbr>Time<wbr>ByBeat</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_fannithm_editor_core.PJSKMapEditor.html#scrollTo" class="tsd-kind-icon">scroll<wbr>To</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_fannithm_editor_core.PJSKMapEditor.html#setCurrentTime" class="tsd-kind-icon">set<wbr>Current<wbr>Time</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_fannithm_editor_core.PJSKMapEditor.html#setHeightPerSecond" class="tsd-kind-icon">set<wbr>Height<wbr>Per<wbr>Second</a>
