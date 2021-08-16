@@ -53,6 +53,7 @@ export class PJSKMapEditor {
 		background: 0xffffff,
 		lane: 0x000000,
 		bpm: 0x00ffff,
+		time: 0xff0000,
 		beat: {
 			third: 0xff0000,
 			half: 0x000000,
@@ -80,6 +81,7 @@ export class PJSKMapEditor {
 		}
 	};
 	private time: number;
+	private currentTime: number;
 	private selectionBox: number[];
 	private scrollTicker: PIXI.Ticker;
 	private autoScrollDelta: number;
@@ -110,7 +112,7 @@ export class PJSKMapEditor {
 		this.const = {
 			resolution,
 			fontSize: 18 / resolution,
-			heightPerSecond: 3200 / resolution,
+			heightPerSecond: 500 / resolution,
 			spaceY: 200 / resolution,
 			width: width,
 			height: height,
@@ -122,6 +124,7 @@ export class PJSKMapEditor {
 			maxHeight: 0
 		};
 		this.time = time;
+		this.currentTime = 0;
 		this.const.maxHeight = this.const.heightPerSecond * time + this.const.spaceY * 2;
 		this.container = {
 			lane: new PIXI.Container(),
@@ -334,6 +337,7 @@ export class PJSKMapEditor {
 		this.app.stage.addChild(this.container.selection);
 		this.drawBeat();
 		this.drawBPM();
+		this.drawCurrentTimeLine();
 		this.drawNote();
 		this.drawSlide();
 		this.drawSelectionBox();
@@ -363,7 +367,7 @@ export class PJSKMapEditor {
 		return this.fractionToDecimal(beat1) - this.fractionToDecimal(beat2);
 	}
 
-	private getTimeByBeat(beat: PJSK.MapBeat): number {
+	getTimeByBeat(beat: PJSK.MapBeat): number {
 		let time = 0;
 		for (let i = 0; i < this.map.bpms.length; i++) {
 			const bpm = this.map.bpms[i];
@@ -378,11 +382,11 @@ export class PJSKMapEditor {
 		return time;
 	}
 
-	private getHeightByBeat(beat: PJSK.MapBeat): number {
+	getHeightByBeat(beat: PJSK.MapBeat): number {
 		return this.const.spaceY + this.getTimeByBeat(beat) * this.const.heightPerSecond;
 	}
 
-	private getHeightByTime(time: number): number {
+	getHeightByTime(time: number): number {
 		return this.const.spaceY + time * this.const.heightPerSecond;
 	}
 
@@ -414,6 +418,20 @@ export class PJSKMapEditor {
 		selectionBox.drawRect(box[0], y, box[2] - box[0], height);
 		selectionBox.endFill();
 		this.container.selection.addChild(selectionBox);
+	}
+
+	private drawCurrentTimeLine() {
+		const height = this.getHeightByTime(this.currentTime);
+		if (height >= this.scrollBottom && height <= this.scrollBottom + this.const.height) {
+			const line = new PIXI.Graphics();
+			line.name = `Time-line`;
+			line.lineStyle(this.const.lineWidth, this.colors.time, 1);
+			line.moveTo(0, 0);
+			line.lineTo(this.const.width * 0.8, 0);
+			line.x = this.const.width * 0.1;
+			line.y = this.getYInCanvas(height);
+			this.container.time.addChild(line);
+		}
 	}
 
 	private drawBPM(): void {
@@ -460,7 +478,7 @@ export class PJSKMapEditor {
 		line.lineTo(drawText ? this.const.width : this.getLaneX(12), 0);
 		line.y = this.getYInCanvas(height);
 		if (drawText) {
-			const text = new PIXI.Text(`${beat[0] + 1}:${(beat[1] / 12) + 1}`, {
+			const text = new PIXI.Text(`${Math.floor((beat[0]) / 4) + 1}:${beat[0] % 4 + 1}`, {
 				fontSize: this.const.fontSize,
 				fill: color,
 				align: 'left'
@@ -480,7 +498,7 @@ export class PJSKMapEditor {
 		this.container.time = new PIXI.Container();
 		// 1/12 beat per loop
 		for (let i = 0; ; i++) {
-			const beat: PJSK.MapBeat = [Math.floor(i / 48), i % 48, 48];
+			const beat: PJSK.MapBeat = [Math.floor(i / 12), i % 12, 12];
 			const time = this.getTimeByBeat(beat);
 			const height = this.getHeightByTime(time);
 			if (height - this.const.height > this.const.maxHeight - this.const.spaceY) break;
@@ -684,6 +702,7 @@ export class PJSKMapEditor {
 					}
 					else if (note.type === PJSK.NoteType.SlideEndFlick) {
 						this.drawBaseNote(note, (note.critical || slide.critical) ? 'critical' : 'flick', height, slide);
+						// TODO do not hide flick arrow before scroll out of screen
 						this.drawFlickArrow({
 							...note,
 							critical: note?.critical || slide.critical
@@ -739,12 +758,26 @@ export class PJSKMapEditor {
 	}
 
 	setHeightPerSecond(heightPerSecond: number): void {
-		if (heightPerSecond < 800 || heightPerSecond > 12800) return;
+		//  TODO scroll height
+		if (heightPerSecond < 100 || heightPerSecond > 2000) return;
 		this.scrollTo(this.scrollBottom * heightPerSecond / this.const.heightPerSecond);
 		this.const.heightPerSecond = heightPerSecond / this.resolution;
 		this.const.spaceY = this.const.heightPerSecond / 16;
 		this.const.maxHeight = this.const.heightPerSecond * this.time + this.const.spaceY * 2;
 		this.reRender();
+	}
+
+	getCurrentTime(): number {
+		return this.currentTime;
+	}
+
+	setCurrentTime(time: number): void {
+		this.currentTime = time;
+		this.reRender();
+	}
+
+	getConst(name: string): number {
+		return this.const[name];
 	}
 }
 

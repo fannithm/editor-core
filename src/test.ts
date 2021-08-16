@@ -22,7 +22,7 @@ import './style.css';
 		function setHeightPerSecond(action: string) {
 			if (mapEditor === null) return;
 			const height = mapEditor.getHeightPerSecond();
-			mapEditor.setHeightPerSecond(action === '+' ? height * 1.2 : height / 1.2);
+			mapEditor.setHeightPerSecond(action === '+' ? (height + (height < 1000 ? 100 : 200)) : height - 100);
 		}
 
 		$add.addEventListener('click', () => {
@@ -67,10 +67,37 @@ import './style.css';
 			mapEditor.event.addEventListener('scroll', (event: CustomEvent) => {
 				$bottom.value = event.detail.scrollBottom;
 			});
-			mapEditor.scrollTo(50800);
+			mapEditor.scrollTo(0);
 		});
 		$id.value = '135';
 		$load.click();
+
+		const $music = document.getElementById('music') as HTMLInputElement;
+		const $audio = document.getElementById('audio') as HTMLAudioElement;
+		const $follow = document.getElementById('follow') as HTMLInputElement
+
+		$music.addEventListener('input', () => {
+			const file = $music.files[0];
+			const url = URL.createObjectURL(file);
+			$audio.src = url;
+		});
+
+		let timer = null;
+		$audio.addEventListener('play', () => {
+			timer = setInterval(() => {
+				if (mapEditor !== null) {
+					mapEditor.setCurrentTime($audio.currentTime);
+					if ($follow.checked) {
+						mapEditor.scrollTo(mapEditor.getHeightByTime($audio.currentTime) - mapEditor.getConst('spaceY'));
+					}
+				}
+			}, 16);
+		})
+
+		$audio.addEventListener('pause', () => {
+			clearInterval(timer);
+		});
+
 	}
 })();
 
