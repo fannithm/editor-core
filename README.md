@@ -1,4 +1,8 @@
-# Fannithm Editor Core
+# @fannithm/editor-core
+
+[![GitHub package.json version](https://img.shields.io/github/package-json/v/fannithm/editor-core)]()
+
+Core part of the Fannithm Editor.
 
 ## Demo
 

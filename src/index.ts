@@ -1,12 +1,12 @@
 /**
- * # Core lib for Fannithm Editor
+ * # Core part of the Fannithm Editor.
  *
  * ## Guide
+ *
  * Project Sekai Editor: {@link PJSKMapEditor}
  *
- * BanG Dream Editor: Still not start
+ * BanG Dream Editor: Still not started
  * @module @fannithm/editor-core
  */
 export * from './PJSKMapEditor';
 export * from './event';
-

@@ -1,7 +1,7 @@
 {
   "name": "@fannithm/editor-core",
   "description": "Editor core for Fannithm Editor",
-  "version": "0.1.0-snapshot.1",
+  "version": "0.1.0-snapshot.2",
   "main": "index.js",
   "license": "AGPL-3.0",
   "author": "Qing Fu <zz5840@qq.com>",
