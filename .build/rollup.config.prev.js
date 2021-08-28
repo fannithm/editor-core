@@ -9,7 +9,7 @@ import filesize from 'rollup-plugin-filesize';
 import { uglify } from "rollup-plugin-uglify";
 
 export default {
-	input: 'src/test.ts',
+	input: 'src/test/test.ts',
 	output: {
 		dir: 'dist',
 		entryFileNames: "bundle-[hash].js",
@@ -27,7 +27,7 @@ export default {
 		}),
 		commonjs(),
 		html2({
-			template: 'src/index.html',
+			template: 'src/test/index.html',
 			externals: {
 				before: [
 					{ tag: 'script', src: 'https://unpkg.com/pixi.js@6.0.4/dist/browser/pixi.min.js' },

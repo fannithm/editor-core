@@ -8,4 +8,5 @@
  * @module @fannithm/editor-core
  */
 export * from './PJSKMapEditor';
+export * from './event';
 

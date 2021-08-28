@@ -3,6 +3,8 @@ import { PJSK, UUID } from '@fannithm/const';
 import bezierEasing from 'bezier-easing';
 import SingleNote from './notes/TapNote';
 import SlideNote from './notes/SlideNote';
+import { PJSKEventType, PJSKScrollEvent } from './event';
+import SlideVisibleNote from './notes/SlideVisibleNote';
 
 /**
  * ## Usage
@@ -166,7 +168,6 @@ export class PJSKMapEditor {
 		selectArea.interactive = true;
 		selectArea.endFill();
 		this.app.stage.addChild(selectArea);
-
 		this.drawLane();
 		this.reRender();
 		this.app.view.addEventListener('wheel', (event) => {
@@ -184,13 +185,13 @@ export class PJSKMapEditor {
 			const y = this.scrollBottom + (this.const.height - point.y);
 			this.selectionBox = [x, y, x, y];
 			selectArea.on('mousemove', selectAreaMoveHandler);
-			this.event.addEventListener(PJSKEventType.SCROLL, selectAndScrollHandler);
+			this.event.addEventListener(PJSKEventType.Scroll, selectAndScrollHandler);
 			this.reRender();
 		});
 		window.addEventListener('mouseup', () => {
 			this.selectionBox = [0, 0, 0, 0];
 			selectArea.removeListener('mousemove', selectAreaMoveHandler);
-			this.event.removeEventListener(PJSKEventType.SCROLL, selectAndScrollHandler);
+			this.event.removeEventListener(PJSKEventType.Scroll, selectAndScrollHandler);
 			this.autoScrollDelta = 0;
 			this.scrollTicker.stop();
 			// move temp selection to selection
@@ -260,11 +261,36 @@ export class PJSKMapEditor {
 
 		for (let i = 0; i < this.map.slides.length; i++) {
 			const slide = this.map.slides[i];
+			const endHeight = this.getHeightByBeat(slide.notes[slide.notes.length - 1].beat);
+			if (endHeight < startY) continue;
 			for (let j = 0; j < slide.notes.length; j++) {
 				const note = slide.notes[j];
 				const height = this.getHeightByBeat(note.beat);
-				const noteStartX = this.getLaneX(note.lane);
-				const noteEndX = this.getLaneX(note.lane + note.width);
+				let noteStartX = note.lane !== undefined ? this.getLaneX(note.lane) : 0;
+				let noteEndX = note.lane !== undefined ? this.getLaneX(note.lane + note.width) : 0;
+				// calculate lane of un-positioned note
+				if (note.lane === undefined) {
+					const noteReversedIndex = slide.notes.length - j - 1;
+					const start = slide.notes.concat().reverse().find((note, index) => index > noteReversedIndex && note.lane !== undefined);
+					const end = slide.notes.find((note, index) => index > j && note.lane !== undefined);
+					const fromHeight = this.getHeightByBeat(start.beat);
+					const toHeight = this.getHeightByBeat(end.beat);
+					const progress = (height - fromHeight) / (toHeight - fromHeight);
+					const bezier = [
+						false,
+						[0, 0, 1, 1],
+						[0, 0, 0, .5],
+						[1, .5, 1, 1],
+						[1, .5, 0, .5],
+						start.bezier
+					][start.curve];
+					const easing = bezier && bezierEasing(bezier[0], bezier[1], bezier[2], bezier[3]);
+					const width = start.width + (end.width - start.width) * easing(progress);
+					const lane = start.lane + (end.lane - start.lane) * easing(progress);
+					noteStartX = this.getLaneX(bezier ? lane : start.lane);
+					noteEndX = this.getLaneX(bezier ? (lane + width) : (start.lane + start.width));
+				}
+
 				if (height >= startY && height <= endY &&
 					noteStartX >= startX && noteEndX <= endX &&
 					!this.selection.slide[slide.id]?.includes(note.id)) {
@@ -546,7 +572,9 @@ export class PJSKMapEditor {
 	private singleClickHandler(event: PIXI.InteractionEvent) {
 		const id = (event.target as SingleNote).id;
 		if (!event.data.originalEvent.ctrlKey) this.emptySelection();
-		this.selection.single.push(id);
+		const index = this.selection.single.indexOf(id);
+		if (index === -1) this.selection.single.push(id);
+		else this.selection.single.splice(index, 1);
 		this.reRender();
 	}
 
@@ -555,7 +583,9 @@ export class PJSKMapEditor {
 		const slideId = (event.target as SlideNote).slideId;
 		if (!event.data.originalEvent.ctrlKey) this.emptySelection();
 		if (!this.selection.slide[slideId]) this.selection.slide[slideId] = [];
-		this.selection.slide[slideId].push(id);
+		const index = this.selection.slide[slideId].indexOf(id);
+		if (index === -1) this.selection.slide[slideId].push(id);
+		else this.selection.slide[slideId].splice(index, 1);
 		this.reRender();
 	}
 
@@ -626,19 +656,21 @@ export class PJSKMapEditor {
 		line.moveTo(this.getLaneX(note.lane + 0.1), 0);
 		line.lineTo(this.getLaneX(note.lane + note.width - 0.1), 0);
 		line.y = this.getYInCanvas(height);
+		// TODO select invisible note
+		// line.interactive = true;
+		// line.on('click', this.slideClickHandler.bind(this));
 		this.container.slide.addChild(line);
 	}
 
-	private drawVisibleNote(note: PJSK.INoteSlideVisible, height: number, critical = false): void {
-		const sprite = new PIXI.Sprite(this.notes[`slide_node${critical ? '_critical' : ''}`]);
+	private drawVisibleNote(note: PJSK.INoteSlideVisible, height: number, slide: PJSK.INoteSlide): void {
+		const sprite = new SlideVisibleNote(this.notes[`slide_node${slide.critical ? '_critical' : ''}`], note, slide);
 		sprite.name = `Visible-${note.id}`;
-		if (note.lane !== undefined) {
-			const scale = this.const.noteHeight / sprite.height;
-			sprite.scale.set(scale);
-			sprite.x = this.getLaneX(note.lane + (note.width / 2)) - (sprite.width / 2);
-			sprite.y = this.getYInCanvas(height) - (sprite.height / 2);
-			this.container.slide.addChild(sprite);
-		}
+		const scale = this.const.noteHeight / sprite.height;
+		sprite.scale.set(scale);
+		sprite.x = this.getLaneX(note.lane + (note.width / 2)) - (sprite.width / 2);
+		sprite.y = this.getYInCanvas(height) - (sprite.height / 2);
+		sprite.on('click', this.slideClickHandler.bind(this));
+		this.container.slide.addChild(sprite);
 	}
 
 	private drawSkippedVisibleNote(slide: PJSK.INoteSlide, start: PJSK.INoteSlideNote, from: number, to: number) {
@@ -660,13 +692,17 @@ export class PJSKMapEditor {
 			if (height >= this.scrollBottom - this.const.noteHeight &&
 				height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
 				const progress = (height - fromHeight) / (toHeight - fromHeight);
-				this.drawVisibleNote({
+				const _note = {
 					id: note.id,
 					type: PJSK.NoteType.SlideVisible,
 					beat: note.beat,
 					width: start.width + (end.width - start.width) * easing(progress),
 					lane: start.lane + (end.lane - start.lane) * easing(progress),
-				}, height, slide.critical);
+				} as PJSK.INoteSlideVisible;
+				this.drawVisibleNote(_note, height, slide);
+				if (this.selection.slide[slide.id]?.includes(note.id) || this.selection.slideTemp[slide.id]?.includes(note.id)) {
+					this.drawSelectionRect(_note, height);
+				}
 			}
 			else if (height > this.scrollBottom + this.const.height + this.const.noteHeight) break;
 		}
@@ -675,15 +711,17 @@ export class PJSKMapEditor {
 	private drawSlide(): void {
 		for (let i = 0; i < this.map.slides.length; i++) {
 			const slide = this.map.slides[i];
-			if (this.getHeightByBeat(slide.notes[0].beat) > this.scrollBottom + this.const.height + this.const.noteHeight) return;
+			if (this.getHeightByBeat(slide.notes[slide.notes.length - 1].beat) < this.scrollBottom) continue;
+			if (this.getHeightByBeat(slide.notes[0].beat) > this.scrollBottom + this.const.height + this.const.noteHeight) break;
 			for (let j = 0; j < slide.notes.length; j++) {
 				const note = slide.notes[j];
 				const next = slide.notes[j + 1];
 				const height = this.getHeightByBeat(note.beat);
+				// find next note has lane property
 				let nextCurve: PJSK.INoteSlideNote = next;
 				let nextCurveIndex = j;
 				if (next && next.lane === undefined) {
-					nextCurveIndex = j + 1 + slide.notes.slice(j + 1).findIndex(v => v.lane !== undefined);
+					nextCurveIndex += 1 + slide.notes.slice(j + 1).findIndex(v => v.lane !== undefined);
 					nextCurve = slide.notes[nextCurveIndex];
 				}
 				// draw un-positioned slide visible note
@@ -693,7 +731,6 @@ export class PJSKMapEditor {
 					const nextHeight = this.getHeightByBeat(nextCurve.beat);
 					this.drawCurve(note, nextCurve, height, nextHeight, slide.critical);
 					if (next.lane === undefined) this.drawSkippedVisibleNote(slide, note, j + 1, nextCurveIndex);
-					// TODO select un-positioned node
 				}
 				if (height >= this.scrollBottom - this.const.noteHeight &&
 					height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
@@ -710,7 +747,7 @@ export class PJSKMapEditor {
 					} // TODO select slide node when clicking
 					else if (note.type === PJSK.NoteType.SlideInvisible) this.drawInvisibleNote(note, height, slide.critical);
 					else if (note.type === PJSK.NoteType.SlideVisible) {
-						this.drawVisibleNote(note, height, slide.critical);
+						this.drawVisibleNote(note, height, slide);
 					}
 					if (this.selection.slide[slide.id]?.includes(note.id) || this.selection.slideTemp[slide.id]?.includes(note.id)) {
 						this.drawSelectionRect(note, height);
@@ -722,9 +759,10 @@ export class PJSKMapEditor {
 
 	private drawSelectionRect(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, height: number) {
 		const rect = new PIXI.Graphics();
+		rect.name = `Selection-${note.id}`;
 		rect.lineStyle(this.const.lineWidth * 4, this.colors.selection);
 		rect.drawRect(this.getLaneX(note.lane) - this.const.paddingX, this.getYInCanvas(height) - this.const.noteHeight / 2, 0.06 * this.const.width * note.width + this.const.paddingX * 2, this.const.noteHeight);
-		this.container.note.addChild(rect);
+		this.container.selection.addChild(rect);
 	}
 
 	private drawNote(): void {
@@ -779,36 +817,4 @@ export class PJSKMapEditor {
 	getConst(name: string): number {
 		return this.const[name];
 	}
-}
-
-/**
- * PJSKEventType enumeration
- */
-export enum PJSKEventType {
-	/**
-	 * ## Usage:
-	 * ```js
-	 * editor.event.addEventListener(PJSKEventType.SCROLL, (event: PJSKScrollEvent) => {
-	 * 	console.log(event.detail.scrollBottom)
-	 * })
-	 * ```
-	 * See {@link PJSKScrollEvent.detail}
-	 * @event scroll
-	 */
-	SCROLL = 'scroll'
-}
-
-export interface PJSKScrollEvent extends CustomEvent<PJSKScrollEventDetail> {
-	readonly detail: PJSKScrollEventDetail
-}
-
-export interface PJSKScrollEventDetail {
-	/**
-	 * The scroll bottom before scroll
-	 */
-	oldScrollBottom: number;
-	/**
-	 * The scroll bottom of the editor.
-	 */
-	scrollBottom: number
 }

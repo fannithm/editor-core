@@ -9,7 +9,7 @@ import livereload from 'rollup-plugin-livereload';
 import postcss from 'rollup-plugin-postcss';
 
 export default {
-	input: 'src/test.ts',
+	input: 'src/test/test.ts',
 	watch: {
 		include: 'src/**/*'
 	},
@@ -29,7 +29,7 @@ export default {
 		}),
 		commonjs(),
 		html2({
-			template: 'src/index.html',
+			template: 'src/test/index.html',
 			externals: {
 				before: [
 					{ tag: 'script', src: 'https://unpkg.com/pixi.js@6.0.4/dist/browser/pixi.js' }
