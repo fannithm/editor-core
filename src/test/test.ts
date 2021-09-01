@@ -63,11 +63,11 @@ import './style.css';
 				mapEditor.destroy();
 				mapEditor = null;
 			}
-			mapEditor = new PJSKMapEditor(document.getElementById('app'), map, 180);
+			mapEditor = new PJSKMapEditor(document.getElementById('app'), map, 10);
 			mapEditor.event.addEventListener(PJSKEventType.Scroll, (event: CustomEvent) => {
 				$bottom.value = event.detail.scrollBottom;
 			});
-			mapEditor.scrollTo(31700);
+			mapEditor.scrollTo(0);
 		});
 		$id.value = '135';
 		$load.click();

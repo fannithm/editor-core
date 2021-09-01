@@ -3,7 +3,7 @@ import { PJSK, UUID } from '@fannithm/const';
 import bezierEasing from 'bezier-easing';
 import SingleNote from './notes/TapNote';
 import SlideNote from './notes/SlideNote';
-import { PJSKEventType, PJSKScrollEvent } from './event';
+import { PJSKEventType } from './event';
 import SlideVisibleNote from './notes/SlideVisibleNote';
 import Cursor from './notes/Cursor';
 
@@ -185,12 +185,12 @@ export class PJSKMapEditor {
 		this.drawLane();
 		this.reRender();
 		this.app.view.addEventListener('wheel', (event) => {
-			const scrollBottom = Math.min(this.const.maxHeight, Math.max(0, this.scrollBottom - event.deltaY / this.resolution));
+			const scrollBottom = Math.min(this.const.maxHeight - this.const.height, Math.max(0, this.scrollBottom - event.deltaY / this.resolution));
 			this.scrollTo(scrollBottom);
 		});
 		const selectAreaMoveHandler = this.selectAreaMoveHandler.bind(this);
-		const selectAndScrollHandler = this.selectAndScrollHandler.bind(this)
 		selectArea.on('mousedown', (event: PIXI.InteractionEvent) => {
+			if (event.data.button !== 0) return;
 			if (!event.data.originalEvent.ctrlKey) {
 				this.emptySelection();
 			}
@@ -199,13 +199,13 @@ export class PJSKMapEditor {
 			const y = this.scrollBottom + (this.const.height - point.y);
 			this.selectionBox = [x, y, x, y];
 			selectArea.on('mousemove', selectAreaMoveHandler);
-			this.event.addEventListener(PJSKEventType.Scroll, selectAndScrollHandler);
+			this.event.addEventListener(PJSKEventType.Scroll, selectAreaMoveHandler);
 			this.reRender();
 		});
 		window.addEventListener('mouseup', () => {
 			this.selectionBox = [0, 0, 0, 0];
 			selectArea.removeListener('mousemove', selectAreaMoveHandler);
-			this.event.removeEventListener(PJSKEventType.Scroll, selectAndScrollHandler);
+			this.event.removeEventListener(PJSKEventType.Scroll, selectAreaMoveHandler);
 			this.autoScrollDelta = 0;
 			this.scrollTicker.stop();
 			// move temp selection to selection
@@ -227,10 +227,15 @@ export class PJSKMapEditor {
 			const [beat, lane] = this.getCursorPosition();
 			this.moveCursor(beat, lane);
 		});
+		this.event.addEventListener(PJSKEventType.Scroll, () => {
+			const [beat, lane] = this.getCursorPosition();
+			this.moveCursor(beat, lane);
+		});
+
 	}
 
-	private selectAreaMoveHandler(event: PIXI.InteractionEvent): void {
-		const point = event.data.global;
+	private selectAreaMoveHandler(): void {
+		const point = this.lastMouseCursorPosition;
 		this.selectionBox[2] = point.x;
 		this.selectionBox[3] = this.scrollBottom + (this.const.height - point.y);
 		// auto scroll
@@ -245,14 +250,6 @@ export class PJSKMapEditor {
 		}
 		this.findSelectedNote();
 		this.reRender();
-	}
-	/**
-	 * Emit when editor is scrolling and select box is visible
-	 * This function is used to update y of select box when scroll
-	 */
-	private selectAndScrollHandler(event: PJSKScrollEvent) {
-		this.selectionBox[3] += event.detail.scrollBottom - event.detail.oldScrollBottom;
-		this.findSelectedNote();
 	}
 
 	/**
@@ -337,7 +334,7 @@ export class PJSKMapEditor {
 			oldScrollBottom: this.scrollBottom,
 			scrollBottom: 0,
 		};
-		this.scrollBottom = Math.min(this.const.maxHeight, Math.max(0, height));
+		this.scrollBottom = Math.min(this.const.maxHeight - this.const.height, Math.max(0, height));
 		detail.scrollBottom = this.scrollBottom;
 		this.event.dispatchEvent(new CustomEvent('scroll', {
 			detail
@@ -548,7 +545,7 @@ export class PJSKMapEditor {
 			const beat: PJSK.MapBeat = [Math.floor(i / slice), i % slice, slice];
 			const time = this.getTimeByBeat(beat);
 			const height = this.getHeightByTime(time);
-			if (height - this.const.height > this.const.maxHeight - this.const.spaceY) break;
+			if (height > this.const.maxHeight - this.const.spaceY) break;
 			if (height >= this.scrollBottom && height <= this.scrollBottom + this.const.height) {
 				if (i % slice === 0)
 					this.drawBeatLine(beat, this.colors.beat.half, 1, height, true);
@@ -787,7 +784,9 @@ export class PJSKMapEditor {
 	}
 
 	private moveCursor(beat: PJSK.MapBeat, lane: number): void {
+		if (beat === undefined) return;
 		const height = this.getHeightByBeat(beat);
+		if (height > this.const.maxHeight - this.const.spaceY) return;
 		if (lane < 0 || lane > 11) {
 			this.container.cursor.visible = false;
 			return;
@@ -829,7 +828,7 @@ export class PJSKMapEditor {
 	}
 
 	setHeightPerSecond(heightPerSecond: number): void {
-		//  TODO scroll height
+		// TODO scroll height
 		if (heightPerSecond < 100 || heightPerSecond > 2000) return;
 		this.scrollTo(this.scrollBottom * heightPerSecond / this.const.heightPerSecond);
 		this.const.heightPerSecond = heightPerSecond / this.resolution;
@@ -850,6 +849,7 @@ export class PJSKMapEditor {
 	setBeatSlice(slice: number): void {
 		this.beatSlice = slice;
 	}
+
 	/**
 	 * Get the current position of the cursor.
 	 * @returns the beat and the lane of the cursor
@@ -857,7 +857,7 @@ export class PJSKMapEditor {
 	getCursorPosition(): [PJSK.MapBeat, number] {
 		const mouseHeight = this.scrollBottom + this.const.height - this.lastMouseCursorPosition.y;
 		let lastNegative = 0;
-		let lastBeat: PJSK.MapBeat;
+		let lastBeat: PJSK.MapBeat = [0, 0, 1];
 		const beatSlice = this.beatSlice;
 		// 1/beatSlice beat per loop
 		for (let i = 0; ; i++) {
