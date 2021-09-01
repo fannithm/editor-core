@@ -3,6 +3,8 @@
  */
 export enum PJSKEventType {
 	/**
+	 * Emitted when scroll bottom of the editor is changed.
+	 *
 	 * ## Usage:
 	 * ```js
 	 * editor.event.addEventListener(PJSKEventType.Scroll, (event: PJSKScrollEvent) => {
@@ -12,7 +14,11 @@ export enum PJSKEventType {
 	 * See {@link PJSKScrollEvent.detail}
 	 * @event scroll
 	 */
-	Scroll = 'scroll'
+	Scroll = 'scroll',
+	/**
+	 * Emitted when the editor is to destroy.
+	 */
+	Destroy = 'destroy'
 }
 
 export interface PJSKScrollEvent extends CustomEvent<PJSKScrollEventDetail> {

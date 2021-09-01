@@ -91,6 +91,8 @@ export class PJSKMapEditor {
 	private selectionBox: number[];
 	private scrollTicker: PIXI.Ticker;
 	private autoScrollDelta: number;
+	private dragStartBeat: PJSK.MapBeat;
+	private actionList: MapEditorAction[];
 	/**
 	 * See [EventTarget](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) on MDN for usage.
 	 *
@@ -189,6 +191,7 @@ export class PJSKMapEditor {
 			this.scrollTo(scrollBottom);
 		});
 		const selectAreaMoveHandler = this.selectAreaMoveHandler.bind(this);
+		// selection rect
 		selectArea.on('mousedown', (event: PIXI.InteractionEvent) => {
 			if (event.data.button !== 0) return;
 			if (!event.data.originalEvent.ctrlKey) {
@@ -202,7 +205,7 @@ export class PJSKMapEditor {
 			this.event.addEventListener(PJSKEventType.Scroll, selectAreaMoveHandler);
 			this.reRender();
 		});
-		window.addEventListener('mouseup', () => {
+		const mouseUpHandler = () => {
 			this.selectionBox = [0, 0, 0, 0];
 			selectArea.removeListener('mousemove', selectAreaMoveHandler);
 			this.event.removeEventListener(PJSKEventType.Scroll, selectAreaMoveHandler);
@@ -220,7 +223,9 @@ export class PJSKMapEditor {
 			this.selection.singleTemp = [];
 			this.selection.slideTemp = {};
 			this.reRender();
-		});
+		};
+		window.addEventListener('mouseup', mouseUpHandler);
+		// move cursor
 		selectArea.on('mousemove', (event: PIXI.InteractionEvent) => {
 			this.lastMouseCursorPosition.x = event.data.global.x;
 			this.lastMouseCursorPosition.y = event.data.global.y;
@@ -231,7 +236,9 @@ export class PJSKMapEditor {
 			const [beat, lane] = this.getCursorPosition();
 			this.moveCursor(beat, lane);
 		});
-
+		this.event.addEventListener(PJSKEventType.Destroy, () => {
+			window.removeEventListener('mouseup', mouseUpHandler);
+		});
 	}
 
 	private selectAreaMoveHandler(): void {
@@ -336,7 +343,7 @@ export class PJSKMapEditor {
 		};
 		this.scrollBottom = Math.min(this.const.maxHeight - this.const.height, Math.max(0, height));
 		detail.scrollBottom = this.scrollBottom;
-		this.event.dispatchEvent(new CustomEvent('scroll', {
+		this.event.dispatchEvent(new CustomEvent(PJSKEventType.Scroll, {
 			detail
 		}));
 		this.reRender();
@@ -387,6 +394,7 @@ export class PJSKMapEditor {
 	}
 
 	destroy(): void {
+		this.event.dispatchEvent(new CustomEvent(PJSKEventType.Destroy));
 		this.app.destroy(true, {
 			children: true
 		});
@@ -880,4 +888,10 @@ export class PJSKMapEditor {
 	getConst(name: string): number {
 		return this.const[name];
 	}
+}
+
+type MapEditorActionName = 'unselect' | 'select';
+
+interface MapEditorAction {
+	type: MapEditorActionName
 }

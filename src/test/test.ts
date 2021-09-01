@@ -63,7 +63,7 @@ import './style.css';
 				mapEditor.destroy();
 				mapEditor = null;
 			}
-			mapEditor = new PJSKMapEditor(document.getElementById('app'), map, 10);
+			mapEditor = new PJSKMapEditor(document.getElementById('app'), map, 180);
 			mapEditor.event.addEventListener(PJSKEventType.Scroll, (event: CustomEvent) => {
 				$bottom.value = event.detail.scrollBottom;
 			});
