@@ -5,6 +5,7 @@ import SingleNote from './notes/TapNote';
 import SlideNote from './notes/SlideNote';
 import { PJSKEventType, PJSKScrollEvent } from './event';
 import SlideVisibleNote from './notes/SlideVisibleNote';
+import Cursor from './notes/Cursor';
 
 /**
  * ## Usage
@@ -32,6 +33,7 @@ export class PJSKMapEditor {
 		slide: PIXI.Container;
 		arrow: PIXI.Container;
 		selection: PIXI.Container;
+		cursor: Cursor
 	};
 	private notes: {
 		[key: string]: PIXI.Texture;
@@ -49,7 +51,8 @@ export class PJSKMapEditor {
 		lineWidth: number,
 		noteHeight: number,
 		arrowHeight: number,
-		maxHeight: number
+		maxHeight: number,
+		cursorLineWidth: number
 	};
 	private colors = {
 		background: 0xffffff,
@@ -65,13 +68,10 @@ export class PJSKMapEditor {
 		slideNote: 0x30e5a8,
 		critical: 0xfcf9cd,
 		criticalNote: 0xf1e41d,
-		selection: 0x0390fc
+		selection: 0x0390fc,
+		cursor: 0x000000
 	};
-	private beatLine = {
-		third: false,
-		half: true,
-		quarter: true
-	};
+	private beatSlice: number;
 	private selection: {
 		single: UUID[],
 		slide: {
@@ -84,6 +84,10 @@ export class PJSKMapEditor {
 	};
 	private time: number;
 	private currentTime: number;
+	private lastMouseCursorPosition: {
+		x: number,
+		y: number
+	};
 	private selectionBox: number[];
 	private scrollTicker: PIXI.Ticker;
 	private autoScrollDelta: number;
@@ -123,7 +127,8 @@ export class PJSKMapEditor {
 			lineWidth: 1 / resolution,
 			noteHeight: 32 / resolution,
 			arrowHeight: 32 / resolution,
-			maxHeight: 0
+			maxHeight: 0,
+			cursorLineWidth: 3 / resolution
 		};
 		this.time = time;
 		this.currentTime = 0;
@@ -134,12 +139,16 @@ export class PJSKMapEditor {
 			note: new PIXI.Container(),
 			slide: new PIXI.Container(),
 			arrow: new PIXI.Container(),
-			selection: new PIXI.Container()
+			selection: new PIXI.Container(),
+			cursor: new Cursor(this.const.cursorLineWidth, this.const.width * 0.06 * 1.2, this.colors.cursor)
 		};
 		this.scrollBottom /= resolution;
 		this.app.view.style.width = width + 'px';
 		this.app.view.style.height = height + 'px';
 		container.appendChild(this.app.view);
+		this.app.stage.addChild(this.container.cursor);
+		this.container.cursor.visible = false;
+		this.container.cursor.zIndex = 15;
 		this.app.stage.addChild(this.container.lane);
 		this.app.stage.sortableChildren = true;
 		this.app.stage.interactive = true;
@@ -156,13 +165,18 @@ export class PJSKMapEditor {
 		this.scrollTicker = new PIXI.Ticker();
 		this.scrollTicker.autoStart = false;
 		this.scrollTicker.add(this.scrollTickerHandler.bind(this));
+		this.beatSlice = 4;
+		this.lastMouseCursorPosition = {
+			x: 0,
+			y: 0
+		}
 		this.start();
 	}
 
 	private start(): void {
 		const selectArea = new PIXI.Graphics();
 		selectArea.name = 'SelectArea';
-		selectArea.beginFill(this.colors.background, 0.5);
+		selectArea.beginFill(this.colors.background, 1);
 		selectArea.drawRect(0, 0, this.const.width, this.const.height);
 		selectArea.zIndex = -1;
 		selectArea.interactive = true;
@@ -206,6 +220,12 @@ export class PJSKMapEditor {
 			this.selection.singleTemp = [];
 			this.selection.slideTemp = {};
 			this.reRender();
+		});
+		selectArea.on('mousemove', (event: PIXI.InteractionEvent) => {
+			this.lastMouseCursorPosition.x = event.data.global.x;
+			this.lastMouseCursorPosition.y = event.data.global.y;
+			const [beat, lane] = this.getCursorPosition();
+			this.moveCursor(beat, lane);
 		});
 	}
 
@@ -522,20 +542,21 @@ export class PJSKMapEditor {
 			children: true
 		});
 		this.container.time = new PIXI.Container();
-		// 1/12 beat per loop
+		const slice = this.beatSlice;
+		// 1/beatSlice beat per loop
 		for (let i = 0; ; i++) {
-			const beat: PJSK.MapBeat = [Math.floor(i / 12), i % 12, 12];
+			const beat: PJSK.MapBeat = [Math.floor(i / slice), i % slice, slice];
 			const time = this.getTimeByBeat(beat);
 			const height = this.getHeightByTime(time);
 			if (height - this.const.height > this.const.maxHeight - this.const.spaceY) break;
 			if (height >= this.scrollBottom && height <= this.scrollBottom + this.const.height) {
-				if (i % 12 === 0)
+				if (i % slice === 0)
 					this.drawBeatLine(beat, this.colors.beat.half, 1, height, true);
-				else if (i % 6 === 0 && this.beatLine.half)
+				else if (i % (slice / 2) === 0)
 					this.drawBeatLine(beat, this.colors.beat.half, 0.2, height)
-				else if (i % 4 === 0 && this.beatLine.third)
+				else if (i % (slice / 3) === 0)
 					this.drawBeatLine(beat, this.colors.beat.third, 0.4, height)
-				else if (i % 3 === 0 && this.beatLine.quarter)
+				else if (i % (slice / 4) === 0)
 					this.drawBeatLine(beat, this.colors.beat.quarter, 0.4, height)
 			} else if (height > this.scrollBottom + this.const.height) break;
 		}
@@ -765,6 +786,18 @@ export class PJSKMapEditor {
 		this.container.selection.addChild(rect);
 	}
 
+	private moveCursor(beat: PJSK.MapBeat, lane: number): void {
+		const height = this.getHeightByBeat(beat);
+		if (lane < 0 || lane > 11) {
+			this.container.cursor.visible = false;
+			return;
+		}
+		const y = this.getYInCanvas(height);
+		this.container.cursor.y = y;
+		this.container.cursor.x = this.getLaneX(lane - 0.1);
+		this.container.cursor.visible = true;
+	}
+
 	private drawNote(): void {
 		for (let i = 0; i < this.map.notes.length; i++) {
 			const note = this.map.notes[i];
@@ -812,6 +845,36 @@ export class PJSKMapEditor {
 	setCurrentTime(time: number): void {
 		this.currentTime = time;
 		this.reRender();
+	}
+
+	setBeatSlice(slice: number): void {
+		this.beatSlice = slice;
+	}
+	/**
+	 * Get the current position of the cursor.
+	 * @returns the beat and the lane of the cursor
+	 */
+	getCursorPosition(): [PJSK.MapBeat, number] {
+		const mouseHeight = this.scrollBottom + this.const.height - this.lastMouseCursorPosition.y;
+		let lastNegative = 0;
+		let lastBeat: PJSK.MapBeat;
+		const beatSlice = this.beatSlice;
+		// 1/beatSlice beat per loop
+		for (let i = 0; ; i++) {
+			const beat: PJSK.MapBeat = [Math.floor(i / beatSlice), i % beatSlice, beatSlice];
+			const height = this.getHeightByBeat(beat);
+			if (height < mouseHeight) {
+				lastNegative = mouseHeight - height;
+				lastBeat = beat;
+				continue;
+			}
+			if (height >= mouseHeight) {
+				const positive = height - mouseHeight;
+				const x = this.lastMouseCursorPosition.x - this.getLaneX(0);
+				const lane = Math.floor(x / (this.const.width * 0.06));
+				return [positive < lastNegative ? beat : lastBeat, lane];
+			}
+		}
 	}
 
 	getConst(name: string): number {
