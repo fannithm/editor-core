@@ -851,10 +851,11 @@ export class PJSKMapEditor {
 	setHeightPerSecond(heightPerSecond: number): void {
 		// TODO scroll height
 		if (heightPerSecond < 100 || heightPerSecond > 2000) return;
-		this.scrollTo(this.scrollBottom * heightPerSecond / this.const.heightPerSecond);
+		const time = (this.scrollBottom - this.const.spaceY) / this.const.heightPerSecond;
 		this.const.heightPerSecond = heightPerSecond / this.resolution;
-		this.const.spaceY = this.const.heightPerSecond / 16;
+		this.const.spaceY = this.const.heightPerSecond / 2.5;
 		this.const.maxHeight = this.const.heightPerSecond * this.time + this.const.spaceY * 2;
+		this.scrollTo(time * this.const.heightPerSecond + this.const.spaceY);
 		this.reRender();
 	}
 
