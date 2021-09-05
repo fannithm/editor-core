@@ -55,10 +55,10 @@ import './style.css';
 			mapEditor && mapEditor.scrollTo(bottom);
 		});
 		$load.addEventListener('click', async () => {
-			// const res = await fetch(`https://assets.pjsek.ai/file/pjsekai-assets/startapp/music/music_score/${$id.value.padStart(4, '0')}_01/${$diff.value}`);
-			// const map = convertor(await res.text());
-			const res = await fetch('map/lzn.json');
-			const map = await res.json();
+			const res = await fetch(`https://assets.pjsek.ai/file/pjsekai-assets/startapp/music/music_score/${$id.value.padStart(4, '0')}_01/${$diff.value}`);
+			const map = convertor(await res.text());
+			// const res = await fetch('map/lzn.json');
+			// const map = await res.json();
 			if (mapEditor !== null) {
 				mapEditor.destroy();
 				mapEditor = null;
