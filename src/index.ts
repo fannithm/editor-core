@@ -8,5 +8,4 @@
  * BanG Dream Editor: Still not started
  * @module @fannithm/editor-core
  */
-export * from './PJSKMapEditor';
-export * from './event';
+export * from './PJSK';

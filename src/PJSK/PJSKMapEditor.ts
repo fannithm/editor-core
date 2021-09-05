@@ -1,11 +1,12 @@
 import * as PIXI from 'pixi.js';
-import { PJSK, UUID } from '@fannithm/const';
+import { PJSK } from '@fannithm/const';
 import bezierEasing from 'bezier-easing';
 import SingleNote from './notes/TapNote';
 import SlideNote from './notes/SlideNote';
-import { PJSKEventType } from './event';
+import * as PJSKEvent from './PJSKEvent';
 import SlideVisibleNote from './notes/SlideVisibleNote';
 import Cursor from './notes/Cursor';
+import { IEditorSelection } from './types';
 
 /**
  * ## Usage
@@ -72,27 +73,18 @@ export class PJSKMapEditor {
 		cursor: 0x000000
 	};
 	private beatSlice: number;
-	private selection: {
-		single: UUID[],
-		slide: {
-			[key: string]: UUID[]
-		},
-		singleTemp: UUID[],
-		slideTemp: {
-			[key: string]: UUID[]
-		}
-	};
+	private selection: IEditorSelection;
+	private tempSelection: IEditorSelection;
+	private selectionBox: number[];
 	private time: number;
 	private currentTime: number;
 	private lastMouseCursorPosition: {
 		x: number,
 		y: number
 	};
-	private selectionBox: number[];
 	private scrollTicker: PIXI.Ticker;
 	private autoScrollDelta: number;
 	private dragStartBeat: PJSK.MapBeat;
-	private actionList: MapEditorAction[];
 	/**
 	 * See [EventTarget](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) on MDN for usage.
 	 *
@@ -159,10 +151,12 @@ export class PJSKMapEditor {
 		this.event = new EventTarget();
 		this.selection = {
 			single: [],
-			slide: {},
-			singleTemp: [],
-			slideTemp: {}
+			slide: {}
 		};
+		this.tempSelection = {
+			single: [],
+			slide: {}
+		}
 		this.selectionBox = [0, 0, 0, 0];
 		this.scrollTicker = new PIXI.Ticker();
 		this.scrollTicker.autoStart = false;
@@ -171,11 +165,12 @@ export class PJSKMapEditor {
 		this.lastMouseCursorPosition = {
 			x: 0,
 			y: 0
-		}
+		};
 		this.start();
 	}
 
 	private start(): void {
+		this.drawLane();
 		const selectArea = new PIXI.Graphics();
 		selectArea.name = 'SelectArea';
 		selectArea.beginFill(this.colors.background, 1);
@@ -184,14 +179,22 @@ export class PJSKMapEditor {
 		selectArea.interactive = true;
 		selectArea.endFill();
 		this.app.stage.addChild(selectArea);
-		this.drawLane();
+		this.listen(selectArea);
 		this.reRender();
+	}
+
+	private listen(selectArea: PIXI.Graphics) {
+		// mouse wheel
 		this.app.view.addEventListener('wheel', (event) => {
 			const scrollBottom = Math.min(this.const.maxHeight - this.const.height, Math.max(0, this.scrollBottom - event.deltaY / this.resolution));
 			this.scrollTo(scrollBottom);
 		});
-		const selectAreaMoveHandler = this.selectAreaMoveHandler.bind(this);
 		// selection rect
+		const selectAreaMoveHandler = this.selectAreaMoveHandler.bind(this);
+		let oldSelection: IEditorSelection = {
+			single: [],
+			slide: {}
+		};
 		selectArea.on('mousedown', (event: PIXI.InteractionEvent) => {
 			if (event.data.button !== 0) return;
 			if (!event.data.originalEvent.ctrlKey) {
@@ -202,29 +205,40 @@ export class PJSKMapEditor {
 			const y = this.scrollBottom + (this.const.height - point.y);
 			this.selectionBox = [x, y, x, y];
 			selectArea.on('mousemove', selectAreaMoveHandler);
-			this.event.addEventListener(PJSKEventType.Scroll, selectAreaMoveHandler);
+			this.event.addEventListener(PJSKEvent.Type.Scroll, selectAreaMoveHandler);
 			this.reRender();
+			window.addEventListener('mouseup', mouseUpHandler);
 		});
+
 		const mouseUpHandler = () => {
+			window.removeEventListener('mouseup', mouseUpHandler);
 			this.selectionBox = [0, 0, 0, 0];
-			selectArea.removeListener('mousemove', selectAreaMoveHandler);
-			this.event.removeEventListener(PJSKEventType.Scroll, selectAreaMoveHandler);
+			selectArea.off('mousemove', selectAreaMoveHandler);
+			this.event.removeEventListener(PJSKEvent.Type.Scroll, selectAreaMoveHandler);
 			this.autoScrollDelta = 0;
 			this.scrollTicker.stop();
 			// move temp selection to selection
-			this.selection.single.push(...this.selection.singleTemp);
-			for (const id in this.selection.slideTemp) {
-				if (Object.prototype.hasOwnProperty.call(this.selection.slideTemp, id)) {
-					const slide = this.selection.slideTemp[id];
+			this.selection.single.push(...this.tempSelection.single);
+			for (const id in this.tempSelection.slide) {
+				if (Object.prototype.hasOwnProperty.call(this.tempSelection.slide, id)) {
+					const slide = this.tempSelection.slide[id];
 					if (!this.selection.slide[id]) this.selection.slide[id] = [];
 					this.selection.slide[id].push(...slide);
 				}
 			}
-			this.selection.singleTemp = [];
-			this.selection.slideTemp = {};
+			this.tempSelection.single = [];
+			this.tempSelection.slide = {};
+			const newSelection = JSON.parse(JSON.stringify(this.selection));
+			this.event.dispatchEvent(new CustomEvent<PJSKEvent.ISelectEventDetail>(PJSKEvent.Type.Select, {
+				detail: {
+					oldSelection,
+					newSelection: newSelection
+				}
+			}));
+			oldSelection = JSON.parse(JSON.stringify(newSelection));
 			this.reRender();
 		};
-		window.addEventListener('mouseup', mouseUpHandler);
+
 		// move cursor
 		selectArea.on('mousemove', (event: PIXI.InteractionEvent) => {
 			this.lastMouseCursorPosition.x = event.data.global.x;
@@ -232,12 +246,9 @@ export class PJSKMapEditor {
 			const [beat, lane] = this.getCursorPosition();
 			this.moveCursor(beat, lane);
 		});
-		this.event.addEventListener(PJSKEventType.Scroll, () => {
+		this.event.addEventListener(PJSKEvent.Type.Scroll, () => {
 			const [beat, lane] = this.getCursorPosition();
 			this.moveCursor(beat, lane);
-		});
-		this.event.addEventListener(PJSKEventType.Destroy, () => {
-			window.removeEventListener('mouseup', mouseUpHandler);
 		});
 	}
 
@@ -268,8 +279,8 @@ export class PJSKMapEditor {
 		const startX = Math.min(this.selectionBox[0], this.selectionBox[2]);
 		const endX = Math.max(this.selectionBox[0], this.selectionBox[2]);
 
-		this.selection.singleTemp = [];
-		this.selection.slideTemp = {};
+		this.tempSelection.single = [];
+		this.tempSelection.slide = {};
 
 		for (let i = 0; i < this.map.notes.length; i++) {
 			const note = this.map.notes[i];
@@ -279,7 +290,7 @@ export class PJSKMapEditor {
 			if (height >= startY && height <= endY &&
 				noteStartX >= startX && noteEndX <= endX &&
 				!this.selection.single.includes(note.id)) {
-				this.selection.singleTemp.push(note.id);
+				this.tempSelection.single.push(note.id);
 			} else if (height > endY) break;
 		}
 
@@ -318,8 +329,8 @@ export class PJSKMapEditor {
 				if (height >= startY && height <= endY &&
 					noteStartX >= startX && noteEndX <= endX &&
 					!this.selection.slide[slide.id]?.includes(note.id)) {
-					if (!this.selection.slideTemp[slide.id]) this.selection.slideTemp[slide.id] = [];
-					this.selection.slideTemp[slide.id].push(note.id);
+					if (!this.tempSelection.slide[slide.id]) this.tempSelection.slide[slide.id] = [];
+					this.tempSelection.slide[slide.id].push(note.id);
 				}
 				else if (height > endY && j === 0) return;
 				else if (height > endY) break;
@@ -339,11 +350,11 @@ export class PJSKMapEditor {
 	scrollTo(height: number): void {
 		const detail = {
 			oldScrollBottom: this.scrollBottom,
-			scrollBottom: 0,
+			newScrollBottom: 0,
 		};
 		this.scrollBottom = Math.min(this.const.maxHeight - this.const.height, Math.max(0, height));
-		detail.scrollBottom = this.scrollBottom;
-		this.event.dispatchEvent(new CustomEvent(PJSKEventType.Scroll, {
+		detail.newScrollBottom = this.scrollBottom;
+		this.event.dispatchEvent(new CustomEvent<PJSKEvent.IScrollEventDetail>(PJSKEvent.Type.Scroll, {
 			detail
 		}));
 		this.reRender();
@@ -394,7 +405,7 @@ export class PJSKMapEditor {
 	}
 
 	destroy(): void {
-		this.event.dispatchEvent(new CustomEvent(PJSKEventType.Destroy));
+		this.event.dispatchEvent(new CustomEvent(PJSKEvent.Type.Destroy));
 		this.app.destroy(true, {
 			children: true
 		});
@@ -596,6 +607,7 @@ export class PJSKMapEditor {
 	}
 
 	private singleClickHandler(event: PIXI.InteractionEvent) {
+		if (event.data.button !== 0) return;
 		const id = (event.target as SingleNote).id;
 		if (!event.data.originalEvent.ctrlKey) this.emptySelection();
 		const index = this.selection.single.indexOf(id);
@@ -605,6 +617,7 @@ export class PJSKMapEditor {
 	}
 
 	private slideClickHandler(event: PIXI.InteractionEvent) {
+		if (event.data.button !== 0) return;
 		const id = (event.target as SlideNote).id;
 		const slideId = (event.target as SlideNote).slideId;
 		if (!event.data.originalEvent.ctrlKey) this.emptySelection();
@@ -682,7 +695,7 @@ export class PJSKMapEditor {
 		line.moveTo(this.getLaneX(note.lane + 0.1), 0);
 		line.lineTo(this.getLaneX(note.lane + note.width - 0.1), 0);
 		line.y = this.getYInCanvas(height);
-		// TODO select invisible note
+		// TODO select invisible note when clicking
 		// line.interactive = true;
 		// line.on('click', this.slideClickHandler.bind(this));
 		this.container.slide.addChild(line);
@@ -726,7 +739,7 @@ export class PJSKMapEditor {
 					lane: start.lane + (end.lane - start.lane) * easing(progress),
 				} as PJSK.INoteSlideVisible;
 				this.drawVisibleNote(_note, height, slide);
-				if (this.selection.slide[slide.id]?.includes(note.id) || this.selection.slideTemp[slide.id]?.includes(note.id)) {
+				if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
 					this.drawSelectionRect(_note, height);
 				}
 			}
@@ -775,7 +788,7 @@ export class PJSKMapEditor {
 					else if (note.type === PJSK.NoteType.SlideVisible) {
 						this.drawVisibleNote(note, height, slide);
 					}
-					if (this.selection.slide[slide.id]?.includes(note.id) || this.selection.slideTemp[slide.id]?.includes(note.id)) {
+					if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
 						this.drawSelectionRect(note, height);
 					}
 				}
@@ -812,7 +825,7 @@ export class PJSKMapEditor {
 			if (height >= this.scrollBottom - this.const.noteHeight && height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
 				if (note.type === PJSK.NoteType.Flick) this.drawFlickArrow(note, height);
 				this.drawBaseNote(note, note.critical ? 'critical' : (note.type ? 'flick' : 'tap'), height);
-				if (this.selection.single.includes(note.id) || this.selection.singleTemp.includes(note.id)) {
+				if (this.selection.single.includes(note.id) || this.tempSelection.single.includes(note.id)) {
 					this.drawSelectionRect(note, height);
 				}
 			}
@@ -890,8 +903,4 @@ export class PJSKMapEditor {
 	}
 }
 
-type MapEditorActionName = 'unselect' | 'select';
 
-interface MapEditorAction {
-	type: MapEditorActionName
-}

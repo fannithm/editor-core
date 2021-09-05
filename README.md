@@ -1,6 +1,6 @@
 # @fannithm/editor-core
 
-[![GitHub package.json version](https://img.shields.io/github/package-json/v/fannithm/editor-core)]()
+[![Workflow Status](https://img.shields.io/github/workflow/status/fannithm/editor-core/gh-pages)](https://github.com/fannithm/editor-core/actions/workflows/gh-pages.yml) [![GitHub package.json version](https://img.shields.io/github/package-json/v/fannithm/editor-core)]()
 
 Core part of the Fannithm Editor.
 
@@ -33,7 +33,7 @@ yarn add @fannithm/editor-core
 
 ## Usage
 
-View [guide](https://pjsk-preview.fannithm.xyz/docs/modules/_fannithm_editor_core#guide) in documentation.
+View [docs.opensource.fannithm.xyz](https://docs.opensource.fannithm.xyz/) for detail documentation.
 
 ## BUGs
 

@@ -1,4 +1,4 @@
-import { PJSKEventType, PJSKMapEditor } from "..";
+import { PJSKMapEditor, PJSKEvent } from "../PJSK";
 import convertor from '@fannithm/sus-fannithm-convertor';
 import './style.css';
 
@@ -55,19 +55,22 @@ import './style.css';
 			mapEditor && mapEditor.scrollTo(bottom);
 		});
 		$load.addEventListener('click', async () => {
-			const res = await fetch(`https://assets.pjsek.ai/file/pjsekai-assets/startapp/music/music_score/${$id.value.padStart(4, '0')}_01/${$diff.value}`);
-			const map = convertor(await res.text());
-			// const res = await fetch('map/test.json');
-			// const map = await res.json();
+			// const res = await fetch(`https://assets.pjsek.ai/file/pjsekai-assets/startapp/music/music_score/${$id.value.padStart(4, '0')}_01/${$diff.value}`);
+			// const map = convertor(await res.text());
+			const res = await fetch('map/lzn.json');
+			const map = await res.json();
 			if (mapEditor !== null) {
 				mapEditor.destroy();
 				mapEditor = null;
 			}
 			mapEditor = new PJSKMapEditor(document.getElementById('app'), map, 180);
-			mapEditor.event.addEventListener(PJSKEventType.Scroll, (event: CustomEvent) => {
-				$bottom.value = event.detail.scrollBottom;
+			mapEditor.event.addEventListener(PJSKEvent.Type.Scroll, (event: PJSKEvent.ScrollEvent) => {
+				$bottom.value = event.detail.newScrollBottom.toString();
 			});
 			mapEditor.scrollTo(0);
+			mapEditor.event.addEventListener(PJSKEvent.Type.Select, (event: PJSKEvent.SelectEvent) => {
+				console.log(event.detail);
+			})
 		});
 		$id.value = '135';
 		$load.click();

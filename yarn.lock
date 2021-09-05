@@ -58,9 +58,9 @@
   integrity sha512-L5J4kpFmSRq4LEbvJVj50o3i5cSe3iCo4QSCB/jmChNyrwxpii9t8z00uzSgKNrtFXkEkgfc/7Q7/CYKl3G6Tw==
 
 "@fannithm/sus-fannithm-convertor@^1.2.0":
-  version "1.2.0"
-  resolved "https://npm.pkg.github.com/download/@fannithm/sus-fannithm-convertor/1.2.0/95e311b5332d2ff36eeeaeb079eebc119e572523d3119902d19ec9a6bda2cb48#53832c8299270d25dbca2840607d15f81734ddb5"
-  integrity sha512-eDuRpYgvGR/EhvTsalJKbE50vVkDC9YINCXFO7VFAKLDHV9mRCPFP4t6FE9iwOfrQ9ppbGGIzvD8uSDdYnYE5g==
+  version "1.2.1"
+  resolved "https://npm.pkg.github.com/download/@fannithm/sus-fannithm-convertor/1.2.1/70b25d111546164bb67f0f8c88f5be651e967aa84ec2974ec0e29e0025920c82#0890ec9f0d443a3d9ad96dce3ea1fe398453ed32"
+  integrity sha512-LBIjQJTEG13W5yK1Wf+Fe70rH/P/2eJnk7qFNygfdLKAswOPr8fkw4GMV2KvSSrEWh7QLzQSKQv50qciv2c6vA==
   dependencies:
     "@fannithm/const" "^0.1.0-snapshot.3"
     sus-analyzer "^2.2.4"
