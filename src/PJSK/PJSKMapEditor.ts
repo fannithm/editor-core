@@ -84,7 +84,6 @@ export class PJSKMapEditor {
 	};
 	private scrollTicker: PIXI.Ticker;
 	private autoScrollDelta: number;
-	private dragStartBeat: PJSK.MapBeat;
 	/**
 	 * See [EventTarget](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) on MDN for usage.
 	 *
@@ -229,13 +228,15 @@ export class PJSKMapEditor {
 			this.tempSelection.single = [];
 			this.tempSelection.slide = {};
 			const newSelection = JSON.parse(JSON.stringify(this.selection));
-			this.event.dispatchEvent(new CustomEvent<PJSKEvent.ISelectEventDetail>(PJSKEvent.Type.Select, {
-				detail: {
-					oldSelection,
-					newSelection: newSelection
-				}
-			}));
-			oldSelection = JSON.parse(JSON.stringify(newSelection));
+			if (!this.isSelectionEqual(oldSelection, newSelection)) {
+				this.event.dispatchEvent(new CustomEvent<PJSKEvent.ISelectEventDetail>(PJSKEvent.Type.Select, {
+					detail: {
+						oldSelection,
+						newSelection: newSelection
+					}
+				}));
+				oldSelection = JSON.parse(JSON.stringify(newSelection));
+			}
 			this.reRender();
 		};
 
@@ -833,6 +834,25 @@ export class PJSKMapEditor {
 		}
 	}
 
+	private isUniqueArrayEqual<T>(a: T[], b: T[]) {
+		return a.length === b.length && a.every(v => b.includes(v))
+	}
+	/**
+	 * Compare is selection a equals to selection b
+	 * @param a selection a
+	 * @param b selection b
+	 */
+	isSelectionEqual(a: IEditorSelection, b: IEditorSelection): boolean {
+		// compare array length
+		if (!this.isUniqueArrayEqual(a.single, b.single)) return false;
+		const slideAKey = Object.keys(a.slide);
+		const slideBKey = Object.keys(b.slide)
+		if (!this.isUniqueArrayEqual(slideAKey, slideBKey)) return false;
+		return slideAKey.every(key => {
+			return this.isUniqueArrayEqual(a.slide[key], b.slide[key])
+		})
+	}
+
 	setMap(map: PJSK.IMap): void {
 		this.map = map;
 		this.map.bpms = this.map.bpms.sort((a, b) => this.minusBeat(a.beat, b.beat));
@@ -849,7 +869,6 @@ export class PJSKMapEditor {
 	}
 
 	setHeightPerSecond(heightPerSecond: number): void {
-		// TODO scroll height
 		if (heightPerSecond < 100 || heightPerSecond > 2000) return;
 		const time = (this.scrollBottom - this.const.spaceY) / this.const.heightPerSecond;
 		this.const.heightPerSecond = heightPerSecond / this.resolution;

@@ -21,9 +21,10 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm config set '//npm.pkg.github.com/:_authToken' "${{ secrets.GITHUB_TOKEN }}"
-      - run: yarn install
-      - run: yarn build:preview
+      - run: |
+          npm config set '//npm.pkg.github.com/:_authToken' "${{ secrets.GITHUB_TOKEN }}"
+          yarn install
+          yarn build:preview
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:

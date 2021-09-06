@@ -68,9 +68,6 @@ import './style.css';
 				$bottom.value = event.detail.newScrollBottom.toString();
 			});
 			mapEditor.scrollTo(0);
-			mapEditor.event.addEventListener(PJSKEvent.Type.Select, (event: PJSKEvent.SelectEvent) => {
-				console.log(event.detail);
-			})
 		});
 		$id.value = '135';
 		$load.click();
