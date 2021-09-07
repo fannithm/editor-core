@@ -1,7 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
-import eslint from '@rollup/plugin-eslint';
 import serve from 'rollup-plugin-serve';
 import html2 from 'rollup-plugin-html2'
 import spritesmith from "@zz5840/rollup-plugin-sprite";
@@ -51,7 +50,6 @@ export default {
 			}
 		}),
 		postcss(),
-		eslint(),
 		typescript(),
 		serve({
 			contentBase: ['build', 'public'],

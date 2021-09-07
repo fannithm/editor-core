@@ -67,6 +67,9 @@ import './style.css';
 			mapEditor.event.addEventListener(PJSKEvent.Type.Scroll, (event: PJSKEvent.ScrollEvent) => {
 				$bottom.value = event.detail.newScrollBottom.toString();
 			});
+			mapEditor.event.addEventListener(PJSKEvent.Type.Select, (event: PJSKEvent.SelectEvent) => {
+				console.log(mapEditor.getNotesBySelection(event.detail.newSelection));
+			});
 			mapEditor.scrollTo(0);
 		});
 		$id.value = '135';
@@ -96,6 +99,15 @@ import './style.css';
 
 		$audio.addEventListener('pause', () => {
 			clearInterval(timer);
+		});
+
+		const $delete = document.getElementById("delete");
+
+		$delete.addEventListener('click', () => {
+			if (mapEditor !== null) {
+				const notes = mapEditor.deleteNotesBySelection(mapEditor.getSelection());
+				console.log('deleted:', notes);
+			}
 		});
 
 	}

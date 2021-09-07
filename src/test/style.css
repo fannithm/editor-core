@@ -12,11 +12,11 @@ body {
 }
 
 #selector {
-	height: 50px;
+	height: 80px;
 	position: relative;
 }
 
 #app {
-	height: calc(100% - 50px);
+	height: calc(100% - 80px);
 	max-width: 600px;
 }

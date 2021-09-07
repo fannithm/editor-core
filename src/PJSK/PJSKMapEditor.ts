@@ -6,7 +6,7 @@ import SlideNote from './notes/SlideNote';
 import * as PJSKEvent from './PJSKEvent';
 import SlideVisibleNote from './notes/SlideVisibleNote';
 import Cursor from './notes/Cursor';
-import { IEditorSelection } from './types';
+import { IEditorSelection, IEditorSelectionNote } from './types';
 
 /**
  * ## Usage
@@ -837,6 +837,7 @@ export class PJSKMapEditor {
 	private isUniqueArrayEqual<T>(a: T[], b: T[]) {
 		return a.length === b.length && a.every(v => b.includes(v))
 	}
+
 	/**
 	 * Compare is selection a equals to selection b
 	 * @param a selection a
@@ -851,6 +852,71 @@ export class PJSKMapEditor {
 		return slideAKey.every(key => {
 			return this.isUniqueArrayEqual(a.slide[key], b.slide[key])
 		})
+	}
+
+	public getSelection(): IEditorSelection {
+		return JSON.parse(JSON.stringify(this.selection));
+	}
+
+	public getNotesBySelection(selection: IEditorSelection): IEditorSelectionNote {
+		return {
+			single: selection.single.map(id => {
+				const note = this.map.notes.find(note => note.id === id);
+				return { ...note }
+			}),
+			slide: Object.keys(selection.slide).map(id => {
+				const slide = this.map.slides.find(v => v.id === id)
+				return {
+					...slide,
+					notes: slide.notes.map(note => {
+						return { ...note }
+					})
+				}
+			})
+		}
+	}
+
+	/**
+	 * Delete note by selection
+	 * @param selection
+	 * @returns deleted note
+	 */
+	public deleteNotesBySelection(selection: IEditorSelection): IEditorSelectionNote {
+		const selectionNote: IEditorSelectionNote = {
+			single: [],
+			slide: []
+		};
+		this.map.notes = this.map.notes.filter(note => {
+			if (selection.single.includes(note.id)) {
+				selectionNote.single.push(note);
+				return false;
+			}
+			return true;
+		});
+		this.map.slides = this.map.slides.map(slide => {
+			if (!selection.slide[slide.id]) return slide;
+			selectionNote.slide.push({
+				...slide,
+				notes: []
+			});
+			slide.notes = slide.notes.filter((note) => {
+				if (selection.slide[slide.id].includes(note.id)) {
+					// TODO check slide notes length
+					selectionNote.slide.find(v => v.id === slide.id).notes.push(note);
+					return false;
+				}
+				return true;
+			})
+			return slide;
+		}).filter(slide => {
+			if (slide.notes.length === 1) {
+				selectionNote.slide.find(v => v.id === slide.id).notes.push(slide.notes[0]);
+				return false;
+			}
+			return true;
+		});
+		this.reRender();
+		return selectionNote;
 	}
 
 	setMap(map: PJSK.IMap): void {
@@ -922,5 +988,3 @@ export class PJSKMapEditor {
 		return this.const[name];
 	}
 }
-
-

@@ -1,19 +1,21 @@
 import { IEditorSelection } from "./types";
 
 /**
- * PJSKEvent type enumeration
+ * # PJSKEvent type enumeration
+ *
+ * ## Usage
+ * ```js
+ * editor.event.addEventListener(PJSKEvent.Type.Scroll, (event: PJSKEvent.ScrollEvent) => {
+ * 	console.log(event.detail.scrollBottom)
+ * })
+ * ```
+ * View `CustomEvent` documentation on [MDN](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent).
  */
 export enum Type {
 	/**
 	 * Emitted when scroll bottom of the editor is changed.
 	 *
-	 * ## Usage:
-	 * ```js
-	 * editor.event.addEventListener(PJSKEventType.Scroll, (event: PJSKScrollEvent) => {
-	 * 	console.log(event.detail.scrollBottom)
-	 * })
-	 * ```
-	 * See {@link PJSKScrollEvent.detail}
+	 * See {@link IScrollEventDetail}
 	 * @event scroll
 	 */
 	Scroll = 'scroll',
@@ -24,6 +26,7 @@ export enum Type {
 	Destroy = 'destroy',
 	/**
 	 * Emitted when selected note has changed.
+	 * @event select
 	 */
 	Select = 'select'
 }

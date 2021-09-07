@@ -1,7 +1,6 @@
 {
 	"include": [
-		"src",
-		"node_modules/@fannithm/const/src"
+		"src"
 	],
 	"compilerOptions": {
 		"moduleResolution": "node",
@@ -15,8 +14,7 @@
 	},
 	"typedocOptions": {
 		"entryPoints": [
-			"src/index.ts",
-			"node_modules/@fannithm/const/src/index.ts"
+			"src/index.ts"
 		],
 		"name": "Fannithm Editor Core Documentation",
 		"includeVersion": true,
