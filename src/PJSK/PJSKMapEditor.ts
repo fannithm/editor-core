@@ -7,7 +7,7 @@ import * as PJSKEvent from './PJSKEvent';
 import SlideVisibleNote from './notes/SlideVisibleNote';
 import Cursor from './notes/Cursor';
 import { IEditorSelection, IEditorSelectionNote } from './types';
-import { INoteSlideEndFlick } from '@fannithm/const/dist/pjsk';
+import { IMap, INoteSlideEndFlick } from '@fannithm/const/dist/pjsk';
 
 /**
  * ## Usage
@@ -76,6 +76,7 @@ export class PJSKMapEditor {
 	private beatSlice: number;
 	private selection: IEditorSelection;
 	private tempSelection: IEditorSelection;
+	private oldSelection: IEditorSelection;
 	private selectionBox: number[];
 	private time: number;
 	private currentTime: number;
@@ -191,7 +192,7 @@ export class PJSKMapEditor {
 		});
 		// selection rect
 		const selectAreaMoveHandler = this.selectAreaMoveHandler.bind(this);
-		let oldSelection: IEditorSelection = {
+		this.oldSelection = {
 			single: [],
 			slide: {}
 		};
@@ -228,16 +229,7 @@ export class PJSKMapEditor {
 			}
 			this.tempSelection.single = [];
 			this.tempSelection.slide = {};
-			const newSelection = JSON.parse(JSON.stringify(this.selection));
-			if (!this.isSelectionEqual(oldSelection, newSelection)) {
-				this.event.dispatchEvent(new CustomEvent<PJSKEvent.ISelectEventDetail>(PJSKEvent.Type.Select, {
-					detail: {
-						oldSelection,
-						newSelection: newSelection
-					}
-				}));
-				oldSelection = JSON.parse(JSON.stringify(newSelection));
-			}
+			this.dispatchSelectEvent();
 			this.reRender();
 		};
 
@@ -252,6 +244,20 @@ export class PJSKMapEditor {
 			const [beat, lane] = this.getCursorPosition();
 			this.moveCursor(beat, lane);
 		});
+	}
+
+	private dispatchSelectEvent() {
+		const selection = JSON.parse(JSON.stringify(this.selection));
+		if (!this.isSelectionEqual(this.oldSelection, selection)) {
+			console.log(selection);
+			this.event.dispatchEvent(new CustomEvent<PJSKEvent.ISelectEventDetail>(PJSKEvent.Type.Select, {
+				detail: {
+					oldSelection: this.oldSelection,
+					newSelection: selection
+				}
+			}));
+			this.oldSelection = JSON.parse(JSON.stringify(selection));
+		}
 	}
 
 	private selectAreaMoveHandler(): void {
@@ -362,7 +368,7 @@ export class PJSKMapEditor {
 		this.reRender();
 	}
 
-	private reRender(): void {
+	reRender(): void {
 		this.container.time.destroy({
 			children: true
 		});
@@ -615,6 +621,7 @@ export class PJSKMapEditor {
 		const index = this.selection.single.indexOf(id);
 		if (index === -1) this.selection.single.push(id);
 		else this.selection.single.splice(index, 1);
+		this.dispatchSelectEvent();
 		this.reRender();
 	}
 
@@ -627,6 +634,7 @@ export class PJSKMapEditor {
 		const index = this.selection.slide[slideId].indexOf(id);
 		if (index === -1) this.selection.slide[slideId].push(id);
 		else this.selection.slide[slideId].splice(index, 1);
+		this.dispatchSelectEvent();
 		this.reRender();
 	}
 
@@ -867,10 +875,12 @@ export class PJSKMapEditor {
 			}),
 			slide: Object.keys(selection.slide).map(id => {
 				const slide = this.map.slides.find(v => v.id === id);
-				slide.notes = slide.notes.map(note => {
-					return note;
-				})
-				return slide;
+				return {
+					...slide,
+					notes: slide.notes.filter(note => {
+						return selection.slide[id].includes(note.id);
+					})
+				};
 			})
 		}
 	}
