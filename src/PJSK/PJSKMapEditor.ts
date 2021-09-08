@@ -7,6 +7,7 @@ import * as PJSKEvent from './PJSKEvent';
 import SlideVisibleNote from './notes/SlideVisibleNote';
 import Cursor from './notes/Cursor';
 import { IEditorSelection, IEditorSelectionNote } from './types';
+import { INoteSlideEndFlick } from '@fannithm/const/dist/pjsk';
 
 /**
  * ## Usage
@@ -862,16 +863,14 @@ export class PJSKMapEditor {
 		return {
 			single: selection.single.map(id => {
 				const note = this.map.notes.find(note => note.id === id);
-				return { ...note }
+				return note;
 			}),
 			slide: Object.keys(selection.slide).map(id => {
-				const slide = this.map.slides.find(v => v.id === id)
-				return {
-					...slide,
-					notes: slide.notes.map(note => {
-						return { ...note }
-					})
-				}
+				const slide = this.map.slides.find(v => v.id === id);
+				slide.notes = slide.notes.map(note => {
+					return note;
+				})
+				return slide;
 			})
 		}
 	}
@@ -882,41 +881,62 @@ export class PJSKMapEditor {
 	 * @returns deleted note
 	 */
 	public deleteNotesBySelection(selection: IEditorSelection): IEditorSelectionNote {
-		const selectionNote: IEditorSelectionNote = {
+		const deletedNote: IEditorSelectionNote = {
 			single: [],
 			slide: []
 		};
 		this.map.notes = this.map.notes.filter(note => {
 			if (selection.single.includes(note.id)) {
-				selectionNote.single.push(note);
+				deletedNote.single.push(note);
 				return false;
 			}
 			return true;
 		});
 		this.map.slides = this.map.slides.map(slide => {
 			if (!selection.slide[slide.id]) return slide;
-			selectionNote.slide.push({
+			deletedNote.slide.push({
 				...slide,
 				notes: []
 			});
-			slide.notes = slide.notes.filter((note) => {
+			slide.notes = slide.notes.filter((note, index) => {
 				if (selection.slide[slide.id].includes(note.id)) {
-					// TODO check slide notes length
-					selectionNote.slide.find(v => v.id === slide.id).notes.push(note);
+					const deletedSlide = deletedNote.slide.find(v => v.id === slide.id);
+					deletedSlide.notes.push(note);
+					if ((index === 0 || index === slide.notes.length - 1) && slide.notes.length !== 2) {
+						const neighborNote = slide.notes[index + (index === 0 ? 1 : -1)];
+						// change start/end note type
+						neighborNote.type = note.type;
+						// check un-positioned note
+						if (neighborNote.lane === undefined) {
+							deletedSlide.notes.push({
+								...neighborNote
+							});
+							neighborNote.width = note.width;
+							neighborNote.lane = note.lane;
+							neighborNote.curve = note.curve;
+							if (note.bezier !== undefined) neighborNote.bezier = note.bezier;
+							// end flick
+							if ((note as INoteSlideEndFlick).direction !== undefined)
+								(neighborNote as INoteSlideEndFlick).direction = (note as INoteSlideEndFlick).direction;
+							if ((note as INoteSlideEndFlick).critical !== undefined)
+								(neighborNote as INoteSlideEndFlick).critical = (note as INoteSlideEndFlick).critical;
+
+						}
+					}
 					return false;
 				}
 				return true;
-			})
+			});
 			return slide;
 		}).filter(slide => {
+			// check slide notes length
 			if (slide.notes.length === 1) {
-				selectionNote.slide.find(v => v.id === slide.id).notes.push(slide.notes[0]);
-				return false;
+				deletedNote.slide.find(v => v.id === slide.id).notes.push(slide.notes[0]);
 			}
-			return true;
+			return slide.notes.length > 1;
 		});
 		this.reRender();
-		return selectionNote;
+		return deletedNote;
 	}
 
 	setMap(map: PJSK.IMap): void {
