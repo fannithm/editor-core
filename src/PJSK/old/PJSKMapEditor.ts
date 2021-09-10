@@ -1,9 +1,12 @@
-// eslint-disable-file
-
 import * as PIXI from 'pixi.js';
 import { PJSK } from '@fannithm/const';
 import bezierEasing from 'bezier-easing';
-
+import SingleNote from './notes/TapNote';
+import SlideNote from './notes/SlideNote';
+import * as PJSKEvent from './PJSKEvent';
+import SlideVisibleNote from './notes/SlideVisibleNote';
+import Cursor from './notes/Cursor';
+import { IEditorSelection, IEditorSelectionNote } from './types';
 
 /**
  * ## Usage
@@ -24,9 +27,51 @@ export class PJSKMapEditor {
 	private app: PIXI.Application;
 	private map: PJSK.IMap;
 	private resolution: number;
+	private container: {
+		lane: PIXI.Container;
+		time: PIXI.Container;
+		note: PIXI.Container;
+		slide: PIXI.Container;
+		arrow: PIXI.Container;
+		selection: PIXI.Container;
+		cursor: Cursor
+	};
 	private notes: {
 		[key: string]: PIXI.Texture;
 	}
+	private scrollBottom = 0;
+	private const: {
+		resolution: number,
+		fontSize: number,
+		heightPerSecond: number,
+		spaceY: number,
+		width: number,
+		height: number,
+		paddingX: number,
+		paddingY: number,
+		lineWidth: number,
+		noteHeight: number,
+		arrowHeight: number,
+		maxHeight: number,
+		cursorLineWidth: number
+	};
+	private colors = {
+		background: 0xffffff,
+		lane: 0x000000,
+		bpm: 0x00ffff,
+		time: 0xff0000,
+		beat: {
+			third: 0xff0000,
+			half: 0x000000,
+			quarter: 0x0000ff
+		},
+		slide: 0xd9faef,
+		slideNote: 0x30e5a8,
+		critical: 0xfcf9cd,
+		criticalNote: 0xf1e41d,
+		selection: 0x0390fc,
+		cursor: 0x000000
+	};
 	private beatSlice: number;
 	private selection: IEditorSelection;
 	private tempSelection: IEditorSelection;
@@ -57,10 +102,54 @@ export class PJSKMapEditor {
 	 * @param time Map total time, used to calculate editor max height.
 	 */
 	constructor(container: HTMLElement, map: PJSK.IMap, time: number) {
+		const { width, height } = container.getBoundingClientRect();
+		const resolution = window.devicePixelRatio;
+		this.resolution = resolution;
 		this.setMap(map);
+		this.app = new PIXI.Application({
+			backgroundAlpha: 0,
+			width,
+			height,
+			antialias: true,
+			resolution
+		});
+		this.const = {
+			resolution,
+			fontSize: 18 / resolution,
+			heightPerSecond: 500 / resolution,
+			spaceY: 200 / resolution,
+			width: width,
+			height: height,
+			paddingX: 4 / resolution,
+			paddingY: 2 / resolution,
+			lineWidth: 1 / resolution,
+			noteHeight: 32 / resolution,
+			arrowHeight: 32 / resolution,
+			maxHeight: 0,
+			cursorLineWidth: 3 / resolution
+		};
 		this.time = time;
 		this.currentTime = 0;
+		this.const.maxHeight = this.const.heightPerSecond * time + this.const.spaceY * 2;
+		this.container = {
+			lane: new PIXI.Container(),
+			time: new PIXI.Container(),
+			note: new PIXI.Container(),
+			slide: new PIXI.Container(),
+			arrow: new PIXI.Container(),
+			selection: new PIXI.Container(),
+			cursor: new Cursor(this.const.cursorLineWidth, this.const.width * 0.06 * 1.2, this.colors.cursor)
+		};
 		this.scrollBottom /= resolution;
+		this.app.view.style.width = width + 'px';
+		this.app.view.style.height = height + 'px';
+		container.appendChild(this.app.view);
+		this.app.stage.addChild(this.container.cursor);
+		this.container.cursor.visible = false;
+		this.container.cursor.zIndex = 15;
+		this.app.stage.addChild(this.container.lane);
+		this.app.stage.sortableChildren = true;
+		this.app.stage.interactive = true;
 		this.container.lane.name = 'Lane';
 		this.notes = PIXI.Loader.shared.resources['images/sprite.json'].textures;
 		this.event = new EventTarget();
@@ -268,6 +357,62 @@ export class PJSKMapEditor {
 		this.scrollTo(this.scrollBottom + this.autoScrollDelta);
 	}
 
+	scrollTo(height: number): void {
+		const detail = {
+			oldScrollBottom: this.scrollBottom,
+			newScrollBottom: 0,
+		};
+		this.scrollBottom = Math.min(this.const.maxHeight - this.const.height, Math.max(0, height));
+		detail.newScrollBottom = this.scrollBottom;
+		this.event.dispatchEvent(new CustomEvent<PJSKEvent.IScrollEventDetail>(PJSKEvent.Type.Scroll, {
+			detail
+		}));
+		this.reRender();
+	}
+
+	reRender(): void {
+		this.container.time.destroy({
+			children: true
+		});
+		this.container.note.destroy({
+			children: true
+		});
+		this.container.slide.destroy({
+			children: true
+		});
+		this.container.arrow.destroy({
+			children: true
+		});
+		this.container.selection.destroy({
+			children: true
+		});
+		this.container.time = new PIXI.Container();
+		this.container.note = new PIXI.Container();
+		this.container.slide = new PIXI.Container();
+		this.container.arrow = new PIXI.Container();
+		this.container.selection = new PIXI.Container();
+		this.container.time.name = 'Time';
+		this.container.note.name = 'Note';
+		this.container.slide.name = 'Slide';
+		this.container.arrow.name = 'Arrow';
+		this.container.selection.name = 'Selection';
+		this.container.time.zIndex = 5;
+		this.container.arrow.zIndex = 7;
+		this.container.slide.zIndex = 8;
+		this.container.note.zIndex = 9;
+		this.container.selection.zIndex = 10;
+		this.app.stage.addChild(this.container.time);
+		this.app.stage.addChild(this.container.note);
+		this.app.stage.addChild(this.container.slide);
+		this.app.stage.addChild(this.container.arrow);
+		this.app.stage.addChild(this.container.selection);
+		this.drawBeat();
+		this.drawBPM();
+		this.drawCurrentTimeLine();
+		this.drawNote();
+		this.drawSlide();
+		this.drawSelectionBox();
+	}
 
 	destroy(): void {
 		this.event.dispatchEvent(new CustomEvent(PJSKEvent.Type.Destroy));
@@ -290,8 +435,47 @@ export class PJSKMapEditor {
 		});
 	}
 
+	private minusBeat(beat1: PJSK.MapBeat, beat2: PJSK.MapBeat): number {
+		return this.fractionToDecimal(beat1) - this.fractionToDecimal(beat2);
+	}
+
+	getTimeByBeat(beat: PJSK.MapBeat): number {
+		let time = 0;
+		for (let i = 0; i < this.map.bpms.length; i++) {
+			const bpm = this.map.bpms[i];
+			if (this.minusBeat(beat, bpm.beat) <= 0) break;
+			const nextBpm = this.map.bpms[i + 1];
+			time += (nextBpm
+				? (this.minusBeat(beat, nextBpm.beat) > 0
+					? this.minusBeat(nextBpm.beat, bpm.beat)
+					: this.minusBeat(beat, bpm.beat))
+				: (this.minusBeat(beat, bpm.beat))) / bpm.bpm * 60;
+		}
+		return time;
+	}
+
+	getHeightByBeat(beat: PJSK.MapBeat): number {
+		return this.const.spaceY + this.getTimeByBeat(beat) * this.const.heightPerSecond;
+	}
+
+	getHeightByTime(time: number): number {
+		return this.const.spaceY + time * this.const.heightPerSecond;
+	}
+
 	private formatTime(time: number): string {
 		return `${Math.floor(time / 60)}:${(time % 60).toFixed(3).padStart(6, '0')}`
+	}
+
+	private getYInCanvas(height: number): number {
+		return this.const.height - (height - this.scrollBottom);
+	}
+
+	private getLaneX(lane: number): number {
+		return this.const.width * (lane * 6 + 14) / 100;
+	}
+
+	private fractionToDecimal(frac: number[]): number {
+		return frac[0] + (frac[1] / frac[2]);
 	}
 
 	private drawSelectionBox() {
@@ -377,6 +561,32 @@ export class PJSKMapEditor {
 			this.container.time.addChild(text);
 		}
 		this.container.time.addChild(line);
+	}
+
+	private drawBeat(): void {
+		this.container.time.destroy({
+			children: true
+		});
+		this.container.time = new PIXI.Container();
+		const slice = this.beatSlice;
+		// 1/beatSlice beat per loop
+		for (let i = 0; ; i++) {
+			const beat: PJSK.MapBeat = [Math.floor(i / slice), i % slice, slice];
+			const time = this.getTimeByBeat(beat);
+			const height = this.getHeightByTime(time);
+			if (height > this.const.maxHeight - this.const.spaceY) break;
+			if (height >= this.scrollBottom && height <= this.scrollBottom + this.const.height) {
+				if (i % slice === 0)
+					this.drawBeatLine(beat, this.colors.beat.half, 1, height, true);
+				else if (i % (slice / 2) === 0)
+					this.drawBeatLine(beat, this.colors.beat.half, 0.2, height)
+				else if (i % (slice / 3) === 0)
+					this.drawBeatLine(beat, this.colors.beat.third, 0.4, height)
+				else if (i % (slice / 4) === 0)
+					this.drawBeatLine(beat, this.colors.beat.quarter, 0.4, height)
+			} else if (height > this.scrollBottom + this.const.height) break;
+		}
+		this.app.stage.addChild(this.container.time);
 	}
 
 	private drawLane(): void {
@@ -741,6 +951,31 @@ export class PJSKMapEditor {
 		return deletedNote;
 	}
 
+	setMap(map: PJSK.IMap): void {
+		this.map = map;
+		this.map.bpms = this.map.bpms.sort((a, b) => this.minusBeat(a.beat, b.beat));
+		this.map.notes = this.map.notes.sort((a, b) => this.minusBeat(a.beat, b.beat));
+		this.map.slides = this.map.slides.map(v => ({
+			...v,
+			notes: v.notes.sort((a, b) => this.minusBeat(a.beat, b.beat))
+		})).sort((a, b) => this.minusBeat(a.notes[0].beat, b.notes[0].beat))
+		console.log(this.map);
+	}
+
+	getHeightPerSecond(): number {
+		return this.const.heightPerSecond * this.resolution;
+	}
+
+	setHeightPerSecond(heightPerSecond: number): void {
+		if (heightPerSecond < 100 || heightPerSecond > 2000) return;
+		const time = (this.scrollBottom - this.const.spaceY) / this.const.heightPerSecond;
+		this.const.heightPerSecond = heightPerSecond / this.resolution;
+		this.const.spaceY = this.const.heightPerSecond / 2.5;
+		this.const.maxHeight = this.const.heightPerSecond * this.time + this.const.spaceY * 2;
+		this.scrollTo(time * this.const.heightPerSecond + this.const.spaceY);
+		this.reRender();
+	}
+
 	getCurrentTime(): number {
 		return this.currentTime;
 	}
@@ -748,6 +983,10 @@ export class PJSKMapEditor {
 	setCurrentTime(time: number): void {
 		this.currentTime = time;
 		this.reRender();
+	}
+
+	setBeatSlice(slice: number): void {
+		this.beatSlice = slice;
 	}
 
 	/**
@@ -775,5 +1014,9 @@ export class PJSKMapEditor {
 				return [positive < lastNegative ? beat : lastBeat, lane];
 			}
 		}
+	}
+
+	getConst(name: string): number {
+		return this.const[name];
 	}
 }

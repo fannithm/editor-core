@@ -71,6 +71,11 @@
     sus-analyzer "^2.2.4"
     uuid "^8.3.2"
 
+"@fannithm/utils@^0.1.0-snapshot.3":
+  version "0.1.0-snapshot.3"
+  resolved "https://npm.pkg.github.com/download/@fannithm/utils/0.1.0-snapshot.3/4d50b222e63d61e4d8fd7caaed718f5ef2aa9fbba51c7d667e1ace3baff4d054#0cfe2834eda118f0fa9a6da4b01f5935b93511bd"
+  integrity sha512-Z8bir6IIVueVigyNeU76TbkyEzWP4+RSFK0HNgMVf7BIMA5E39pHuwmLXeYWxHQ5ZuPT4ik1suH7N76RhMl8pw==
+
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.5.0.tgz#1407967d4c6eecd7388f83acf1eaf4d0c6e58ef9"
