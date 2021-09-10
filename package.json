@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@fannithm/const": "^0.1.0-snapshot.4",
+    "@fannithm/utils": "^0.1.0-snapshot.3",
     "bezier-easing": "^2.1.0"
   }
 }

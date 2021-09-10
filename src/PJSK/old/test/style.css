@@ -1,0 +1,22 @@
+* {
+	margin: 0;
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+}
+
+body {
+	user-select: none;
+}
+
+#selector {
+	height: 80px;
+	position: relative;
+}
+
+#app {
+	height: calc(100% - 80px);
+	max-width: 600px;
+}
