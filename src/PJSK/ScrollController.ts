@@ -1,7 +1,7 @@
-import Editor from "./Editor";
+import { Editor } from './Editor';
 
-export default class ScrollController {
-	private _scrollBottom: number;
+export class ScrollController {
+	private _scrollBottom = 0;
 
 	constructor(private editor: Editor) {
 	}
@@ -15,7 +15,7 @@ export default class ScrollController {
 	}
 
 	public set scrollBottom(scrollBottom: number) {
-		const newScrollBottom = Math.min(this.editor.const.maxHeight - this.editor.const.height, Math.max(0, scrollBottom)),
+		const newScrollBottom = Math.min(this.editor.const.maxHeight - this.editor.const.height, Math.max(0, scrollBottom));
 		if (newScrollBottom !== this.scrollBottom) {
 			this._scrollBottom = newScrollBottom;
 			this.editor.event.dispatchScrollEvent({
@@ -23,5 +23,6 @@ export default class ScrollController {
 				newScrollBottom
 			});
 		}
+		this.editor.renderer.render();
 	}
 }

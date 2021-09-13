@@ -1,15 +1,18 @@
-import Editor from "./Editor";
-import { NoteType } from "@fannithm/const/dist/pjsk";
+import { Editor } from './Editor';
 
 /**
  * parse map to editor render object
  */
-export default class Parser {
+export class Parser {
 	public renderObjects: IRenderObjects;
 
 	constructor(private editor: Editor) {
+		this.initRenderObjects();
+	}
+
+	private initRenderObjects(): void {
 		this.renderObjects = {
-			lanes: [12, 6],
+			lanes: [],
 			beatLines: [],
 			texts: [],
 			notes: [],
@@ -20,11 +23,31 @@ export default class Parser {
 		};
 	}
 
-	parse(): IRenderObjects {
-		this.parseBeatLines();
-		this.addTimeText();
-		this.parseNotes();
-		return this.renderObjects;
+	parse(): void {
+		this.initRenderObjects();
+		this.addLanes();
+		if (this.map?.timelines.length > 0 && this.map?.bpms.length > 0) {
+			// prime
+			this.parseBeatLines();
+			this.parseBPMLines();
+			this.addTimeText();
+			// visible
+			this.parseNotes();
+		}
+	}
+
+	private addLanes() {
+		const laneNumber = 12;
+		const laneWidth = 6;
+		const leftSpace = (100 - (laneNumber * laneWidth)) / 2;
+		for (let i = 0; i <= 12; i++) {
+			this.renderObjects.lanes.push({
+				name: `Lane-${i}`,
+				x: this.editor.const.width * ((i * laneWidth + leftSpace) / 100),
+				color: (i % 2) ? this.editor.color.secondaryLane : this.editor.color.primeLane,
+				alpha: (i % 2) ? this.editor.color.secondaryLaneAlpha : this.editor.color.primeLaneAlpha
+			});
+		}
 	}
 
 	private parseBeatLines() {
@@ -36,7 +59,7 @@ export default class Parser {
 			const height = this.editor.calculator.getHeightByTime(time);
 			if (height > this.editor.const.maxHeight - this.editor.const.spaceY) break;
 			const object: IRenderBeatLineObject = {
-				name: `BeatLine - ${beat.decimal}`,
+				name: `BeatLine-${beat.decimal}`,
 				x: this.editor.calculator.getLaneX(0),
 				width: this.editor.calculator.getLaneWidth(12),
 				scrollHeight: height,
@@ -48,7 +71,7 @@ export default class Parser {
 				object.alpha = this.editor.color.beatLineWholeAlpha;
 				object.width = this.editor.const.width - this.editor.calculator.getLaneX(0);
 				this.renderObjects.texts.push({
-					name: `BeatLineText - ${beat.decimal}`,
+					name: `BeatLineText-${beat.decimal}`,
 					x: this.editor.const.width - this.editor.const.paddingX,
 					fontSize: this.editor.const.fontSize,
 					scrollHeight: height + this.editor.const.paddingY,
@@ -56,7 +79,7 @@ export default class Parser {
 					alignY: 'bottom',
 					color: this.editor.color.beatLineWhole,
 					alpha: this.editor.color.beatLineWholeAlpha,
-					text: `${Math.floor((beat[0]) / 4) + 1}:${beat[0] % 4 + 1}`
+					text: `${Math.floor((beat.integer) / 4) + 1}:${beat.integer % 4 + 1}`
 				});
 			} else if (i % (slice / 2) === 0) {
 				object.color = this.editor.color.beatLineHalf;
@@ -72,8 +95,66 @@ export default class Parser {
 		}
 	}
 
+	private formatTime(time: number): string {
+		return `${Math.floor(time / 60).toString().padStart(2, '0')}:${(time % 60).toFixed(3).padStart(6, '0')}`
+	}
+
+	private parseBPMLines() {
+		const bpms = this.map.bpms.filter(v => v.timeline === this.editor.timeLineManager.prime);
+		for (let i = 0; i < bpms.length; i++) {
+			const bpm = bpms[i];
+			const bpmTime = this.editor.calculator.getTimeByBeat(this.editor.fraction(bpm.beat));
+			const bpmHeight = this.editor.calculator.getHeightByTime(bpmTime);
+			// bpm line
+			this.renderObjects.beatLines.push({
+				name: `BPM-${bpm.id}-line`,
+				x: 0,
+				width: this.editor.const.width,
+				scrollHeight: bpmHeight,
+				color: this.editor.color.bpmLine,
+				alpha: 1,
+			});
+			// bpm text
+			this.renderObjects.texts.push({
+				name: `BPM-${bpm.id}-time`,
+				x: this.editor.const.paddingX,
+				scrollHeight: bpmHeight + this.editor.const.paddingY,
+				alignY: 'bottom',
+				fontSize: this.editor.const.fontSize,
+				color: this.editor.color.bpmLine,
+				alpha: 1,
+				text: this.formatTime(bpmTime)
+			});
+			// bpm value
+			this.renderObjects.texts.push({
+				name: `BPM-${bpm.id}-value`,
+				x: this.editor.calculator.getLaneX(12) + this.editor.const.paddingX,
+				scrollHeight: bpmHeight + this.editor.const.paddingY,
+				alignY: 'bottom',
+				fontSize: this.editor.const.fontSize,
+				color: this.editor.color.bpmLine,
+				alpha: 1,
+				text: bpm.bpm.toString()
+			});
+		}
+	}
+
 	private addTimeText() {
-		// TODO "00:00.000";
+		for (let i = 0; i <= this.editor.audioManager.totalTime; i++) {
+			const height = this.editor.calculator.getHeightByTime(i);
+			const text = this.formatTime(i);
+			if (this.renderObjects.texts.some(v => v.text === text)) continue;
+			this.renderObjects.texts.push({
+				name: `Time-${i}`,
+				x: this.editor.const.paddingX,
+				scrollHeight: height,
+				alignY: 'middle',
+				fontSize: this.editor.const.fontSize,
+				color: this.editor.color.timeText,
+				alpha: 1,
+				text
+			})
+		}
 	}
 
 	private parseNotes() {
@@ -97,7 +178,7 @@ export interface IRenderObjects {
 	/**
 	 * lane number, width per lane (percent)
 	 */
-	lanes: [number, number],
+	lanes: IRenderLaneObject[],
 	beatLines: IRenderBeatLineObject[];
 	texts: IRenderTextObject[];
 	notes: IRenderNoteObject[];
@@ -112,6 +193,13 @@ export interface IRenderBeatLineObject {
 	x: number;
 	width: number;
 	scrollHeight: number;
+	color: number;
+	alpha: number;
+}
+
+export interface IRenderLaneObject {
+	name: string;
+	x: number;
 	color: number;
 	alpha: number;
 }

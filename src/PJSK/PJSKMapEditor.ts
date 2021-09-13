@@ -21,19 +21,12 @@ import bezierEasing from 'bezier-easing';
  * ```
  */
 export class PJSKMapEditor {
-	private app: PIXI.Application;
 	private map: PJSK.IMap;
-	private resolution: number;
-	private notes: {
-		[key: string]: PIXI.Texture;
-	}
-	private beatSlice: number;
+	private notes: Record<string, PIXI.Texture>;
 	private selection: IEditorSelection;
 	private tempSelection: IEditorSelection;
 	private oldSelection: IEditorSelection;
 	private selectionBox: number[];
-	private time: number;
-	private currentTime: number;
 	private lastMouseCursorPosition: {
 		x: number,
 		y: number
@@ -44,12 +37,6 @@ export class PJSKMapEditor {
 	private dragStartBeat: PJSK.MapBeat;
 	private dragStartLane: number;
 	private dragStartWidth: number;
-	/**
-	 * See [EventTarget](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) on MDN for usage.
-	 *
-	 * See {@link PJSKEventType} for all events.
-	 */
-	public event: EventTarget;
 
 	/**
 	 * @param container Editor container for containing canvas element.
@@ -58,12 +45,7 @@ export class PJSKMapEditor {
 	 */
 	constructor(container: HTMLElement, map: PJSK.IMap, time: number) {
 		this.setMap(map);
-		this.time = time;
-		this.currentTime = 0;
-		this.scrollBottom /= resolution;
-		this.container.lane.name = 'Lane';
 		this.notes = PIXI.Loader.shared.resources['images/sprite.json'].textures;
-		this.event = new EventTarget();
 		this.selection = {
 			single: [],
 			slide: {}
@@ -76,7 +58,6 @@ export class PJSKMapEditor {
 		this.scrollTicker = new PIXI.Ticker();
 		this.scrollTicker.autoStart = false;
 		this.scrollTicker.add(this.scrollTickerHandler.bind(this));
-		this.beatSlice = 4;
 		this.lastMouseCursorPosition = {
 			x: 0,
 			y: 0
@@ -85,79 +66,8 @@ export class PJSKMapEditor {
 	}
 
 	private start(): void {
-		this.drawLane();
-		const selectArea = new PIXI.Graphics();
-		selectArea.name = 'SelectArea';
-		selectArea.beginFill(this.colors.background, 1);
-		selectArea.drawRect(0, 0, this.const.width, this.const.height);
-		selectArea.zIndex = -1;
-		selectArea.interactive = true;
-		selectArea.endFill();
-		this.app.stage.addChild(selectArea);
 		this.listen(selectArea);
 		this.reRender();
-	}
-
-	private listen(selectArea: PIXI.Graphics) {
-		// mouse wheel
-		this.app.view.addEventListener('wheel', (event) => {
-			const scrollBottom = Math.min(this.const.maxHeight - this.const.height, Math.max(0, this.scrollBottom - event.deltaY / this.resolution));
-			this.scrollTo(scrollBottom);
-		});
-		// selection rect
-		const selectAreaMoveHandler = this.selectAreaMoveHandler.bind(this);
-		this.oldSelection = {
-			single: [],
-			slide: {}
-		};
-		selectArea.on('mousedown', (event: PIXI.InteractionEvent) => {
-			if (event.data.button !== 0) return;
-			if (!event.data.originalEvent.ctrlKey) {
-				this.emptySelection();
-			}
-			const point = event.data.global;
-			const x = point.x;
-			const y = this.scrollBottom + (this.const.height - point.y);
-			this.selectionBox = [x, y, x, y];
-			selectArea.on('mousemove', selectAreaMoveHandler);
-			this.event.addEventListener(PJSKEvent.Type.Scroll, selectAreaMoveHandler);
-			this.reRender();
-			window.addEventListener('mouseup', mouseUpHandler);
-		});
-
-		const mouseUpHandler = () => {
-			window.removeEventListener('mouseup', mouseUpHandler);
-			this.selectionBox = [0, 0, 0, 0];
-			selectArea.off('mousemove', selectAreaMoveHandler);
-			this.event.removeEventListener(PJSKEvent.Type.Scroll, selectAreaMoveHandler);
-			this.autoScrollDelta = 0;
-			this.scrollTicker.stop();
-			// move temp selection to selection
-			this.selection.single.push(...this.tempSelection.single);
-			for (const id in this.tempSelection.slide) {
-				if (Object.prototype.hasOwnProperty.call(this.tempSelection.slide, id)) {
-					const slide = this.tempSelection.slide[id];
-					if (!this.selection.slide[id]) this.selection.slide[id] = [];
-					this.selection.slide[id].push(...slide);
-				}
-			}
-			this.tempSelection.single = [];
-			this.tempSelection.slide = {};
-			this.dispatchSelectEvent();
-			this.reRender();
-		};
-
-		// move cursor
-		selectArea.on('mousemove', (event: PIXI.InteractionEvent) => {
-			this.lastMouseCursorPosition.x = event.data.global.x;
-			this.lastMouseCursorPosition.y = event.data.global.y;
-			const [beat, lane] = this.getCursorPosition();
-			this.moveCursor(beat, lane);
-		});
-		this.event.addEventListener(PJSKEvent.Type.Scroll, () => {
-			const [beat, lane] = this.getCursorPosition();
-			this.moveCursor(beat, lane);
-		});
 	}
 
 	private dispatchSelectEvent() {
@@ -268,14 +178,6 @@ export class PJSKMapEditor {
 		this.scrollTo(this.scrollBottom + this.autoScrollDelta);
 	}
 
-
-	destroy(): void {
-		this.event.dispatchEvent(new CustomEvent(PJSKEvent.Type.Destroy));
-		this.app.destroy(true, {
-			children: true
-		});
-	}
-
 	static loadResource(
 		onLoad?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void,
 		onError?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void): Promise<void> {
@@ -288,10 +190,6 @@ export class PJSKMapEditor {
 			onLoad && loader.onLoad.add(onLoad);
 			onError && loader.onError.add(onError);
 		});
-	}
-
-	private formatTime(time: number): string {
-		return `${Math.floor(time / 60)}:${(time % 60).toFixed(3).padStart(6, '0')}`
 	}
 
 	private drawSelectionBox() {
@@ -319,76 +217,6 @@ export class PJSKMapEditor {
 			line.x = this.const.width * 0.1;
 			line.y = this.getYInCanvas(height);
 			this.container.time.addChild(line);
-		}
-	}
-
-	private drawBPM(): void {
-		for (let i = 0; i < this.map.bpms.length; i++) {
-			const bpm = this.map.bpms[i];
-			const bpmTime = this.getTimeByBeat(bpm.beat);
-			const bpmHeight = this.getHeightByTime(bpmTime);
-			if (bpmHeight >= this.scrollBottom && bpmHeight <= this.scrollBottom + this.const.height) {
-				const line = new PIXI.Graphics();
-				line.name = `BPM-${bpm.id}-line`;
-				line.lineStyle(this.const.lineWidth, this.colors.bpm, 1);
-				line.moveTo(0, 0);
-				line.lineTo(this.const.width, 0);
-				line.y = this.getYInCanvas(bpmHeight);
-				const time = new PIXI.Text(this.formatTime(bpmTime), {
-					fontSize: this.const.fontSize,
-					fill: this.colors.bpm,
-					align: 'left'
-				});
-				time.name = `BPM-${bpm.id}-time`;
-				time.x = this.const.paddingX;
-				time.y = this.getYInCanvas(bpmHeight) - time.height - this.const.paddingY;
-				const value = new PIXI.Text(bpm.bpm.toString(), {
-					fontSize: this.const.fontSize,
-					fill: this.colors.bpm,
-					align: 'left'
-				});
-				value.name = `BPM-${bpm.id}-value`;
-				value.x = this.getLaneX(12) + this.const.paddingX;
-				value.y = this.getYInCanvas(bpmHeight) - value.height - this.const.paddingY;
-				this.container.time.addChild(line);
-				this.container.time.addChild(time);
-				this.container.time.addChild(value);
-			} else if (bpmHeight > this.scrollBottom + this.const.height) break;
-		}
-	}
-
-	private drawBeatLine(beat: number[], color: number, alpha: number, height: number, drawText = false): void {
-		const line = new PIXI.Graphics();
-		const _beat = this.fractionToDecimal(beat);
-		line.name = `Beat-${_beat}-line`;
-		line.lineStyle(this.const.lineWidth, color, alpha);
-		line.moveTo(this.getLaneX(0), 0);
-		line.lineTo(drawText ? this.const.width : this.getLaneX(12), 0);
-		line.y = this.getYInCanvas(height);
-		if (drawText) {
-			const text = new PIXI.Text(`${Math.floor((beat[0]) / 4) + 1}:${beat[0] % 4 + 1}`, {
-				fontSize: this.const.fontSize,
-				fill: color,
-				align: 'left'
-			});
-			text.name = `Beat-${_beat}-beat`;
-			text.x = this.const.width - text.width - this.const.paddingX;
-			text.y = this.getYInCanvas(height) - text.height - this.const.paddingY;
-			this.container.time.addChild(text);
-		}
-		this.container.time.addChild(line);
-	}
-
-	private drawLane(): void {
-		for (let i = 0; i <= 12; i++) {
-			const line = new PIXI.Graphics();
-			line.name = `Lane-${i}`
-			const x = this.const.width * ((i * 6 + 14) / 100);
-			line.lineStyle(this.const.lineWidth, this.colors.lane, ((i % 2) ? 0.2 : 1));
-			line.moveTo(0, 0);
-			line.lineTo(0, this.const.height);
-			line.x = x;
-			this.container.lane.addChild(line);
 		}
 	}
 
@@ -739,15 +567,6 @@ export class PJSKMapEditor {
 		});
 		this.reRender();
 		return deletedNote;
-	}
-
-	getCurrentTime(): number {
-		return this.currentTime;
-	}
-
-	setCurrentTime(time: number): void {
-		this.currentTime = time;
-		this.reRender();
 	}
 
 	/**
