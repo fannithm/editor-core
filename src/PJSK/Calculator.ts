@@ -1,19 +1,20 @@
-import { IMap } from "@fannithm/const/dist/pjsk";
-import { Fraction } from "@fannithm/utils";
-import Editor from "./Editor";
+import { IMap } from '@fannithm/const/dist/pjsk';
+import { Fraction } from '@fannithm/utils';
+import { Editor } from './Editor';
 
-export default class Calculator {
+export class Calculator {
 	constructor(private editor: Editor) {
 	}
 
 	getTimeByBeat(beat: Fraction): number {
 		let time = 0;
-		for (let i = 0; i < this.map.bpms.length; i++) {
-			const bpm = this.map.bpms[i];
+		const bpms = this.map.bpms.filter(v => v.timeline === this.editor.timeLineManager.prime);
+		for (let i = 0; i < bpms.length; i++) {
+			const bpm = bpms[i];
 			const BPMBeat = this.editor.fraction(bpm.beat);
 			if (beat.le(BPMBeat)) break;
-			const nextBpm = this.map.bpms[i + 1];
-			const nextBPMBeat = this.editor.fraction(nextBpm.beat);
+			const nextBpm = bpms[i + 1];
+			const nextBPMBeat = nextBpm ? this.editor.fraction(nextBpm.beat) : null;
 			time += (nextBpm
 				? (beat.gt(nextBPMBeat)
 					? nextBPMBeat.minus(BPMBeat).decimal

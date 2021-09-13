@@ -1,8 +1,9 @@
 import PIXI from 'pixi.js';
+
 /**
  * See [eventemitter3](https://github.com/primus/eventemitter3).
  */
-export default class EventEmitter extends PIXI.utils.EventEmitter {
+export class EventEmitter extends PIXI.utils.EventEmitter {
 	constructor() {
 		super();
 	}
