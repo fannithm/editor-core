@@ -9,6 +9,7 @@ export class Constants {
 	private _paddingY = 2;
 	private _heightPerSecond = 500;
 	private _lineWidth = 1;
+	private _invisibleLineWidth = 3;
 	private _cursorLineWidth = 3;
 	private _noteHeight = 32;
 	private _arrowHeight = 32;
@@ -116,28 +117,52 @@ export class Constants {
 		return this._lineWidth / this.resolution;
 	}
 
+	public get invisibleLineWidthRaw(): number {
+		return this._invisibleLineWidth;
+	}
+
+	public set invisibleLineWidthRaw(invisibleLineWidth: number) {
+		this._invisibleLineWidth = invisibleLineWidth;
+	}
+
+	public get invisibleLineWidth(): number {
+		return this._invisibleLineWidth / this.resolution;
+	}
+
+	public get cursorLineWidthRaw(): number {
+		return this._cursorLineWidth;
+	}
+
+	public set cursorLineWidthRaw(cursorLineWidth: number) {
+		this._cursorLineWidth = cursorLineWidth;
+	}
+
 	public get cursorLineWidth(): number {
 		return this._cursorLineWidth;
 	}
 
-	public set cursorLineWidth(cursorLineWidth: number) {
-		this._cursorLineWidth = cursorLineWidth;
-	}
-
-	public get noteHeight(): number {
+	public get noteHeightRaw(): number {
 		return this._noteHeight;
 	}
 
-	public set noteHeight(noteHeight: number) {
+	public set noteHeightRaw(noteHeight: number) {
 		this._noteHeight = noteHeight;
+	}
+
+	public get noteHeight(): number {
+		return this._noteHeight / this.resolution;
+	}
+
+	public get arrowHeightRaw(): number {
+		return this._arrowHeight;
+	}
+
+	public set arrowHeightRaw(arrowHeight: number) {
+		this._arrowHeight = arrowHeight;
 	}
 
 	public get arrowHeight(): number {
 		return this._arrowHeight;
-	}
-
-	public set arrowHeight(arrowHeight: number) {
-		this._arrowHeight = arrowHeight;
 	}
 }
 

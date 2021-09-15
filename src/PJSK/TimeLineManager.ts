@@ -1,13 +1,6 @@
-import { Editor } from '.';
-
 export class TimeLineManager {
-	private _prime: string;
-	private _visible: string[];
-
-	constructor(private editor: Editor) {
-		this._prime = '';
-		this._visible = [];
-	}
+	private _prime = '';
+	private _visible: string[] = [];
 
 	public get prime(): string {
 		return this._prime;

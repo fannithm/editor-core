@@ -18,16 +18,22 @@ import './style.css';
 		const $text = document.getElementById('text') as HTMLTextAreaElement;
 		const $draw = document.getElementById('draw') as HTMLButtonElement;
 
+		await PJSK.Editor.loadResource((loader, resource) => {
+			console.log(`${loader.progress}% loading: ${resource.url}`);
+		});
+
 		const $app = document.getElementById('app') as HTMLButtonElement;
 		const editor = new PJSK.Editor($app);
 
 		$load.addEventListener('click', async () => {
 			// const res = await fetch(`https://assets.pjsek.ai/file/pjsekai-assets/startapp/music/music_score/${$id.value.padStart(4, '0')}_01/${$diff.value}`);
 			// const map = convertor(await res.text());
-			const res = await fetch('map/test.json');
+			const res = await fetch('map/lzn.json');
 			const map = await res.json();
 			editor.map = map;
 			editor.beatSlice = 1;
+			// editor.scrollController.scrollBottom = 31900;
+			editor.audioManager.totalTime = 180;
 			// const res = await fetch('map/lzn.json');
 			// const map = await res.json();
 			// mapEditor.event.addEventListener(PJSKEvent.Type.Scroll, (event: PJSKEvent.ScrollEvent) => {

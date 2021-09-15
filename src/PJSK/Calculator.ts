@@ -6,9 +6,9 @@ export class Calculator {
 	constructor(private editor: Editor) {
 	}
 
-	getTimeByBeat(beat: Fraction): number {
+	getTimeByBeat(beat: Fraction, timeline: string): number {
 		let time = 0;
-		const bpms = this.map.bpms.filter(v => v.timeline === this.editor.timeLineManager.prime);
+		const bpms = this.map.bpms.filter(v => v.timeline === timeline);
 		for (let i = 0; i < bpms.length; i++) {
 			const bpm = bpms[i];
 			const BPMBeat = this.editor.fraction(bpm.beat);
@@ -24,8 +24,8 @@ export class Calculator {
 		return time;
 	}
 
-	getHeightByBeat(beat: Fraction): number {
-		return this.editor.const.spaceY + this.getTimeByBeat(beat) * this.editor.const.heightPerSecond;
+	getHeightByBeat(beat: Fraction, timeline: string): number {
+		return this.editor.const.spaceY + this.getTimeByBeat(beat, timeline) * this.editor.const.heightPerSecond;
 	}
 
 	getHeightByTime(time: number): number {

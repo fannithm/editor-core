@@ -8,8 +8,12 @@ export class EventEmitter extends PIXI.utils.EventEmitter {
 		super();
 	}
 
-	dispatchScrollEvent(detail: IScrollEvent): void {
-		this.emit(EventType.Scroll, detail);
+	*dispatchScrollEvent(oldScrollBottom: number): Generator<void, void, number> {
+		const newScrollBottom = yield;
+		this.emit(EventType.Scroll, {
+			oldScrollBottom,
+			newScrollBottom
+		});
 	}
 
 	dispatchDestroyEvent(): void {

@@ -1,10 +1,19 @@
+import { INoteFlick, INoteSlide, INoteSlideEndFlick, NoteType } from '@fannithm/const/dist/pjsk';
 import { Editor } from './Editor';
+import bezierEasing from 'bezier-easing';
 
 /**
  * parse map to editor render object
  */
 export class Parser {
 	public renderObjects: IRenderObjects;
+	private bezier = [
+		false,
+		[0, 0, 1, 1],
+		[1, .5, 1, 1],
+		[0, 0, 0, .5],
+		[1, .5, 0, .5]
+	]
 
 	constructor(private editor: Editor) {
 		this.initRenderObjects();
@@ -33,6 +42,7 @@ export class Parser {
 			this.addTimeText();
 			// visible
 			this.parseNotes();
+			this.parseSlide();
 		}
 	}
 
@@ -55,7 +65,7 @@ export class Parser {
 		// 1/beatSlice beat per loop
 		for (let i = 0; ; i++) {
 			const beat = this.editor.fraction([Math.floor(i / slice), i % slice, slice]);
-			const time = this.editor.calculator.getTimeByBeat(beat);
+			const time = this.editor.calculator.getTimeByBeat(beat, this.editor.timeLineManager.prime);
 			const height = this.editor.calculator.getHeightByTime(time);
 			if (height > this.editor.const.maxHeight - this.editor.const.spaceY) break;
 			const object: IRenderBeatLineObject = {
@@ -103,7 +113,7 @@ export class Parser {
 		const bpms = this.map.bpms.filter(v => v.timeline === this.editor.timeLineManager.prime);
 		for (let i = 0; i < bpms.length; i++) {
 			const bpm = bpms[i];
-			const bpmTime = this.editor.calculator.getTimeByBeat(this.editor.fraction(bpm.beat));
+			const bpmTime = this.editor.calculator.getTimeByBeat(this.editor.fraction(bpm.beat), this.editor.timeLineManager.prime);
 			const bpmHeight = this.editor.calculator.getHeightByTime(bpmTime);
 			// bpm line
 			this.renderObjects.beatLines.push({
@@ -146,8 +156,9 @@ export class Parser {
 			if (this.renderObjects.texts.some(v => v.text === text)) continue;
 			this.renderObjects.texts.push({
 				name: `Time-${i}`,
-				x: this.editor.const.paddingX,
+				x: this.editor.calculator.getLaneX(0) - this.editor.const.paddingX,
 				scrollHeight: height,
+				alignX: 'right',
 				alignY: 'middle',
 				fontSize: this.editor.const.fontSize,
 				color: this.editor.color.timeText,
@@ -157,15 +168,171 @@ export class Parser {
 		}
 	}
 
+	private pushFlickObject(note: INoteFlick | INoteSlideEndFlick, height: number) {
+		const width = Math.min(6, note.width);
+		const renderWidth = Math.max(0.8, Math.min(4, width * 0.6));
+		this.renderObjects.arrows.push({
+			name: `Arrow-${note.id}`,
+			x: this.editor.calculator.getLaneX(note.lane + (note.width - renderWidth) / 2),
+			width: this.editor.calculator.getLaneWidth(renderWidth),
+			scrollHeight: height,
+			texture: `flick_arrow_${note.critical ? 'critical_' : ''}${width.toString().padStart(2, '0')}${{
+				0: '',
+				1: '_left',
+				2: '_right'
+			}[note.direction]}`,
+			id: note.id
+		});
+	}
+
 	private parseNotes() {
-		for (let i = 0; i < this.map.notes.length; i++) {
-			/* const note = this.map.notes[i];
-			const height = this.editor.calculator.getHeightByBeat(this.editor.fraction(note.beat));
-			if (note.type === NoteType.Flick) this.ro.arrows.push(note, height);
-			this.ro.notes.push(note, note.critical ? 'critical' : (note.type ? 'flick' : 'tap'), height); */
-			// if (this.selection.single.includes(note.id) || this.tempSelection.single.includes(note.id)) {
-			// 	this.drawSelectionRect(note, height);
+		const notes = this.map.notes.filter(v => this.editor.timeLineManager.visible.includes(v.timeline));
+		for (let i = 0; i < notes.length; i++) {
+			const note = notes[i];
+			const height = this.editor.calculator.getHeightByBeat(this.editor.fraction(note.beat), note.timeline);
+			if (note.type === NoteType.Flick) {
+				this.pushFlickObject(note, height);
+			}
+			this.renderObjects.notes.push({
+				name: `Note-${note.id}`,
+				x: this.editor.calculator.getLaneX(note.lane - 0.1),
+				width: this.editor.calculator.getLaneWidth(note.width + 0.2),
+				scrollHeight: height,
+				texture: note.critical ? 'critical' : (note.type ? 'flick' : 'tap'),
+				id: note.id,
+				alpha: 1
+			});
+			// TODO selection
+			/* if (this.selection.single.includes(note.id) || this.tempSelection.single.includes(note.id)) {
+				this.drawSelectionRect(note, height);
+			} */
+		}
+	}
+
+	private parseUnPositionedNote(slide: INoteSlide, start: number, end: number) {
+		const startNote = slide.notes[start];
+		const endNote = slide.notes[end];
+		const startHeight = this.editor.calculator.getHeightByBeat(this.editor.fraction(startNote.beat), slide.timeline);
+		const endHeight = this.editor.calculator.getHeightByBeat(this.editor.fraction(endNote.beat), slide.timeline);
+		const bezier = [...this.bezier, startNote.bezier][startNote.curve];
+		const easing = bezier && bezierEasing(bezier[0], bezier[1], bezier[2], bezier[3]);
+		for (let i = start + 1; i < end; i++) {
+			const note = slide.notes[i];
+			const height = this.editor.calculator.getHeightByBeat(this.editor.fraction(slide.notes[i].beat), slide.timeline);
+			const progress = (height - startHeight) / (endHeight - startHeight);
+			const lane = bezier ? startNote.lane + (endNote.lane - startNote.lane) * easing(progress) : startNote.lane;
+			const width = bezier ? startNote.width + (endNote.width - startNote.width) * easing(progress) : startNote.width;
+			this.renderObjects.visibleNodes.push({
+				name: `Visible-${note.id}`,
+				x: this.editor.calculator.getLaneX(lane),
+				width: this.editor.calculator.getLaneWidth(width),
+				scrollHeight: height,
+				texture: `slide_node${slide.critical ? '_critical' : ''}`,
+				id: note.id,
+				slideId: slide.id
+			});
+			// TODO selection
+			// if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
+			// 	this.drawSelectionRect(_note, height);
 			// }
+		}
+	}
+
+	private parseSlide() {
+		const slides = this.map.slides.filter(v => this.editor.timeLineManager.visible.includes(v.timeline));
+		for (let i = 0; i < slides.length; i++) {
+			const slide = slides[i];
+			for (let j = 0; j < slide.notes.length; j++) {
+				const note = slide.notes[j];
+				const height = this.editor.calculator.getHeightByBeat(this.editor.fraction(note.beat), slide.timeline);
+				// parse note
+				if ([NoteType.SlideStart, NoteType.SlideEndDefault].includes(note.type)) {
+					this.renderObjects.notes.push({
+						name: `SlideNote-${note.id}`,
+						x: this.editor.calculator.getLaneX(note.lane - 0.1),
+						width: this.editor.calculator.getLaneWidth(note.width + 0.2),
+						scrollHeight: height,
+						texture: slide.critical ? 'critical' : 'slide',
+						id: note.id,
+						slideId: slide.id,
+						alpha: 1
+					});
+				} else if (note.type === NoteType.SlideEndFlick) {
+					this.renderObjects.notes.push({
+						name: `SlideEndFlick-${note.id}`,
+						x: this.editor.calculator.getLaneX(note.lane - 0.1),
+						width: this.editor.calculator.getLaneWidth(note.width + 0.2),
+						scrollHeight: height,
+						texture: (note.critical || slide.critical) ? 'critical' : 'flick',
+						id: note.id,
+						slideId: slide.id,
+						alpha: 1
+					});
+					this.pushFlickObject(note, height);
+				} else if (note.type === NoteType.SlideInvisible) {
+					this.renderObjects.invisibleNodes.push({
+						name: `Invisible-${note.id}`,
+						x: this.editor.calculator.getLaneX(note.lane + 0.1),
+						width: this.editor.calculator.getLaneWidth(note.width - 0.2),
+						scrollHeight: height,
+						color: slide.critical ? this.editor.color.slideCriticalInvisibleNode : this.editor.color.slideInvisibleNode,
+						id: note.id,
+						slideId: slide.id
+					});
+				} else if (note.type === NoteType.SlideVisible) {
+					this.renderObjects.visibleNodes.push({
+						name: `Visible-${note.id}`,
+						x: this.editor.calculator.getLaneX(note.lane),
+						width: this.editor.calculator.getLaneWidth(note.width),
+						scrollHeight: height,
+						texture: `slide_node${slide.critical ? '_critical' : ''}`,
+						id: note.id,
+						slideId: slide.id
+					});
+				}
+				// TODO selection
+				// if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
+				// 	this.drawSelectionRect(note, height);
+				// }
+				// parse curve
+				const next = slide.notes[j + 1]
+				if (next === undefined) break;
+				if (next.lane === undefined) {
+					const end = slide.notes.findIndex((v, index) => index > j && v.lane !== undefined);
+					const endNote = slide.notes[end];
+					this.parseUnPositionedNote(slide, j, end);
+					this.renderObjects.curves.push({
+						name: `Curve-${note.id}`,
+						startX: this.editor.calculator.getLaneX(note.lane + 0.1),
+						startWidth: this.editor.calculator.getLaneWidth(note.width - 0.2),
+						startScrollHeight: height,
+						endX: this.editor.calculator.getLaneX(endNote.lane + 0.1),
+						endWidth: this.editor.calculator.getLaneWidth(endNote.width - 0.2),
+						endScrollHeight: this.editor.calculator.getHeightByBeat(this.editor.fraction(endNote.beat), slide.timeline),
+						bezier: [...this.bezier, note.bezier][note.curve] as false | number[],
+						color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
+						alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
+						id: note.id,
+						slideId: slide.id,
+					});
+					j = end - 1;
+				} else {
+					this.renderObjects.curves.push({
+						name: `Curve-${note.id}`,
+						startX: this.editor.calculator.getLaneX(note.lane + 0.1),
+						startWidth: this.editor.calculator.getLaneWidth(note.width - 0.2),
+						startScrollHeight: height,
+						endX: this.editor.calculator.getLaneX(next.lane + 0.1),
+						endWidth: this.editor.calculator.getLaneWidth(next.width - 0.2),
+						endScrollHeight: this.editor.calculator.getHeightByBeat(this.editor.fraction(next.beat), slide.timeline),
+						bezier: [...this.bezier, note.bezier][note.curve] as false | number[],
+						color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
+						alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
+						id: note.id,
+						slideId: slide.id,
+					});
+				}
+			}
 		}
 	}
 
@@ -222,20 +389,24 @@ export interface IRenderNoteObject {
 	width: number;
 	scrollHeight: number;
 	texture: string;
-	id: string;
 	alpha: number;
+	id: string;
+	slideId?: string;
 }
 
 export interface IRenderCurveObject {
 	name: string;
-	x: number;
+	startX: number;
 	startWidth: number;
 	startScrollHeight: number;
+	endX: number;
 	endWidth: number;
 	endScrollHeight: number;
+	bezier: number[] | false,
 	color: number;
-	id: string;
 	alpha: number;
+	id: string;
+	slideId: string;
 }
 
 export interface IRenderArrowObject {
@@ -254,6 +425,7 @@ export interface IRenderVisibleNodeObject {
 	scrollHeight: number;
 	texture: string;
 	id: string;
+	slideId: string;
 }
 
 export interface IRenderInvisibleNodeObject {
@@ -263,4 +435,5 @@ export interface IRenderInvisibleNodeObject {
 	scrollHeight: number;
 	color: number;
 	id: string;
+	slideId: string;
 }

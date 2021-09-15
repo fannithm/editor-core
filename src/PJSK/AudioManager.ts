@@ -24,7 +24,7 @@ export class AudioManager {
 
 	public set totalTime(totalTime: number) {
 		this._totalTime = totalTime;
-		this.editor.renderer.render();
+		this.editor.renderer.parseAndRender();
 	}
 
 	public get follow(): boolean {

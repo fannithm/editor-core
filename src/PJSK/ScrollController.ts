@@ -17,11 +17,9 @@ export class ScrollController {
 	public set scrollBottom(scrollBottom: number) {
 		const newScrollBottom = Math.min(this.editor.const.maxHeight - this.editor.const.height, Math.max(0, scrollBottom));
 		if (newScrollBottom !== this.scrollBottom) {
+			const g = this.editor.event.dispatchScrollEvent(this.scrollBottom)
 			this._scrollBottom = newScrollBottom;
-			this.editor.event.dispatchScrollEvent({
-				oldScrollBottom: this.scrollBottom,
-				newScrollBottom
-			});
+			g.next(newScrollBottom);
 		}
 		this.editor.renderer.render();
 	}
