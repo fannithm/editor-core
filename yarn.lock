@@ -57,10 +57,10 @@
   resolved "https://npm.pkg.github.com/download/@fannithm/const/0.1.0-snapshot.4/631a786fd1bc36d00686fdd424fc24156daeebcd2d408d617b8dab0acc248ce0#afe730c071498319fdcc223c89556aad397b2227"
   integrity sha512-L5J4kpFmSRq4LEbvJVj50o3i5cSe3iCo4QSCB/jmChNyrwxpii9t8z00uzSgKNrtFXkEkgfc/7Q7/CYKl3G6Tw==
 
-"@fannithm/const@^0.1.0-snapshot.4":
-  version "0.1.0-snapshot.5"
-  resolved "https://npm.pkg.github.com/download/@fannithm/const/0.1.0-snapshot.5/85bb38f04a78f3be7d68fcca3d29006db6ee0c32dace3ca7af651222ab2e6ea7#77eaac6646484a686c62ca416f92e9349850a98c"
-  integrity sha512-jCe/UvbxHnR+RS2YWA1ikrg0Ui3uq+8fnmkVnMLsxbwSj2ac+1hZU9mcSMzg0gIWxWj0xdLaOTzX+4NpOSQ4OQ==
+"@fannithm/const@^0.1.0-snapshot.6":
+  version "0.1.0-snapshot.6"
+  resolved "https://npm.pkg.github.com/download/@fannithm/const/0.1.0-snapshot.6/cc862feb15438f9949c521ebe6902b6a6fbee6b3fd160d9eb507d31953d5584d#7ed7b4d1b6155d350a107494ae7de33d643aa488"
+  integrity sha512-QKYUtoqs3ZMhefx55sBMqhVWAb/gL9N2XUynkqiig7BomUJ+1oPwkCHpLS7e12QSS7Z/qsB0Eun1UE+CaMjBxQ==
 
 "@fannithm/sus-fannithm-convertor@^1.2.0":
   version "1.2.1"

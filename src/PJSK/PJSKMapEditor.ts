@@ -2,7 +2,6 @@
 
 import * as PIXI from 'pixi.js';
 import { PJSK } from '@fannithm/const';
-import bezierEasing from 'bezier-easing';
 
 
 /**
@@ -21,8 +20,6 @@ import bezierEasing from 'bezier-easing';
  * ```
  */
 export class PJSKMapEditor {
-	private map: PJSK.IMap;
-	private notes: Record<string, PIXI.Texture>;
 	private selection: IEditorSelection;
 	private tempSelection: IEditorSelection;
 	private oldSelection: IEditorSelection;
@@ -44,8 +41,6 @@ export class PJSKMapEditor {
 	 * @param time Map total time, used to calculate editor max height.
 	 */
 	constructor(container: HTMLElement, map: PJSK.IMap, time: number) {
-		this.setMap(map);
-		this.notes = PIXI.Loader.shared.resources['images/sprite.json'].textures;
 		this.selection = {
 			single: [],
 			slide: {}
@@ -62,12 +57,6 @@ export class PJSKMapEditor {
 			x: 0,
 			y: 0
 		};
-		this.start();
-	}
-
-	private start(): void {
-		this.listen(selectArea);
-		this.reRender();
 	}
 
 	private dispatchSelectEvent() {
@@ -178,20 +167,6 @@ export class PJSKMapEditor {
 		this.scrollTo(this.scrollBottom + this.autoScrollDelta);
 	}
 
-	static loadResource(
-		onLoad?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void,
-		onError?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void): Promise<void> {
-		return new Promise<void>(resolve => {
-			const loader = PIXI.Loader.shared;
-			loader.add("images/sprite.json").load(() => {
-				console.log('load resources completed');
-				resolve();
-			});
-			onLoad && loader.onLoad.add(onLoad);
-			onError && loader.onError.add(onError);
-		});
-	}
-
 	private drawSelectionBox() {
 		const box = this.selectionBox;
 		if (box[0] === box[2] || box[1] === box[3]) return;
@@ -220,20 +195,6 @@ export class PJSKMapEditor {
 		}
 	}
 
-	private drawBaseNote(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, name: string, height: number, slide?: PJSK.INoteSlide): void {
-		const base = slide === undefined
-			? new SingleNote(this.notes[name], note as PJSK.INoteTap)
-			: new SlideNote(this.notes[name], note as PJSK.INoteSlideNote, slide);
-		base.name = `Note-${name}-${note.id}`;
-		const scale = this.const.noteHeight / base.height;
-		base.scale.set(scale);
-		base.x = this.getLaneX(note.lane) - 0.1 * 0.06 * this.const.width;
-		base.y = this.getYInCanvas(height) - this.const.noteHeight / 2;
-		base.width = (note.width + 0.2) * 0.06 * this.const.width / scale;
-		base.on('click', slide === undefined ? this.singleClickHandler.bind(this) : this.slideClickHandler.bind(this));
-		this.container.note.addChild(base);
-	}
-
 	private singleClickHandler(event: PIXI.InteractionEvent) {
 		if (event.data.button !== 0) return;
 		const id = (event.target as SingleNote).id;
@@ -258,174 +219,6 @@ export class PJSKMapEditor {
 		this.reRender();
 	}
 
-	private drawFlickArrow(note: PJSK.INoteFlick | PJSK.INoteSlideEndFlick, height: number): void {
-		const width = Math.min(6, note.width);
-		const name = `flick_arrow_${note.critical ? 'critical_' : ''}${width.toString().padStart(2, '0')}${{
-			0: '',
-			1: '_left',
-			2: '_right'
-		}[note.direction]}`;
-		const arrow = new PIXI.Sprite(this.notes[name]);
-		arrow.name = `Arrow-${note.id}`;
-		const arrowWidth = (width * 0.8) * 0.06 * this.const.width;
-		const scale = arrowWidth / arrow.width;
-		const arrowHeight = arrow.height * scale;
-		arrow.scale.set(scale);
-		arrow.x = this.getLaneX(note.lane + (note.width - width) / 2 + width * 0.1)
-		arrow.y = this.getYInCanvas(height) - arrowHeight;
-		this.container.arrow.addChild(arrow);
-	}
-
-	private drawCurve(note: PJSK.INoteSlideNote, next: PJSK.INoteSlideNote, height: number, nextHeight: number, critical = false): void {
-		const curve = new PIXI.Graphics();
-		curve.name = `Curve-${note.id}`
-		let bezier = [
-			false,
-			[0, 0, 1, 1],
-			[1, .5, 1, 1],
-			[0, 0, 0, .5],
-			[.42, 0, .58, 1],
-			note.bezier
-		][note.curve];
-		if (bezier) {
-			let from = [this.getLaneX(note.lane + 0.1), this.getYInCanvas(height)];
-			let to = [this.getLaneX(next.lane + 0.1), this.getYInCanvas(nextHeight)];
-			curve.beginFill(critical ? this.colors.critical : this.colors.slide, .8);
-			curve.moveTo(from[0], from[1]);
-			curve.bezierCurveTo(
-				from[0] + bezier[0] * (to[0] - from[0]),
-				from[1] + bezier[1] * (to[1] - from[1]),
-				from[0] + bezier[2] * (to[0] - from[0]),
-				from[1] + bezier[3] * (to[1] - from[1]),
-				to[0],
-				to[1]
-			);
-			curve.lineTo(this.getLaneX(next.lane + next.width - 0.1), this.getYInCanvas(nextHeight))
-			to = [this.getLaneX(note.lane + note.width - 0.1), this.getYInCanvas(height)];
-			from = [this.getLaneX(next.lane + next.width - 0.1), this.getYInCanvas(nextHeight)]
-			const [x1, y1, x2, y2] = bezier as PJSK.CubicBezier;
-			bezier = [1 - x2, 1 - y2, 1 - x1, 1 - y1];
-			curve.bezierCurveTo(
-				from[0] + bezier[0] * (to[0] - from[0]),
-				from[1] + bezier[1] * (to[1] - from[1]),
-				from[0] + bezier[2] * (to[0] - from[0]),
-				from[1] + bezier[3] * (to[1] - from[1]),
-				to[0],
-				to[1]
-			);
-			curve.endFill();
-		}
-		this.container.slide.addChild(curve);
-	}
-
-	private drawInvisibleNote(note: PJSK.INoteSlideInvisible, height: number, critical = false): void {
-		const line = new PIXI.Graphics();
-		line.name = `Invisible-${note.id}`;
-		line.lineStyle(this.const.lineWidth * 3, critical ? this.colors.criticalNote : this.colors.slideNote, 1);
-		line.moveTo(this.getLaneX(note.lane + 0.1), 0);
-		line.lineTo(this.getLaneX(note.lane + note.width - 0.1), 0);
-		line.y = this.getYInCanvas(height);
-		// TODO select invisible note when clicking
-		// line.interactive = true;
-		// line.on('click', this.slideClickHandler.bind(this));
-		this.container.slide.addChild(line);
-	}
-
-	private drawVisibleNote(note: PJSK.INoteSlideVisible, height: number, slide: PJSK.INoteSlide): void {
-		const sprite = new SlideVisibleNote(this.notes[`slide_node${slide.critical ? '_critical' : ''}`], note, slide);
-		sprite.name = `Visible-${note.id}`;
-		const scale = this.const.noteHeight / sprite.height;
-		sprite.scale.set(scale);
-		sprite.x = this.getLaneX(note.lane + (note.width / 2)) - (sprite.width / 2);
-		sprite.y = this.getYInCanvas(height) - (sprite.height / 2);
-		sprite.on('click', this.slideClickHandler.bind(this));
-		this.container.slide.addChild(sprite);
-	}
-
-	private drawSkippedVisibleNote(slide: PJSK.INoteSlide, start: PJSK.INoteSlideNote, from: number, to: number) {
-		const fromHeight = this.getHeightByBeat(start.beat);
-		const end = slide.notes[to];
-		const toHeight = this.getHeightByBeat(end.beat);
-		const bezier = [
-			false,
-			[0, 0, 1, 1],
-			[0, 0, 0, .5],
-			[1, .5, 1, 1],
-			[1, .5, 0, .5],
-			start.bezier
-		][start.curve];
-		const easing = bezier && bezierEasing(bezier[0], bezier[1], bezier[2], bezier[3]);
-		for (let i = from; i < to; i++) {
-			const note = slide.notes[i];
-			const height = this.getHeightByBeat(note.beat);
-			if (height >= this.scrollBottom - this.const.noteHeight &&
-				height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
-				const progress = (height - fromHeight) / (toHeight - fromHeight);
-				const _note = {
-					id: note.id,
-					type: PJSK.NoteType.SlideVisible,
-					beat: note.beat,
-					width: start.width + (end.width - start.width) * easing(progress),
-					lane: start.lane + (end.lane - start.lane) * easing(progress),
-				} as PJSK.INoteSlideVisible;
-				this.drawVisibleNote(_note, height, slide);
-				if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
-					this.drawSelectionRect(_note, height);
-				}
-			}
-			else if (height > this.scrollBottom + this.const.height + this.const.noteHeight) break;
-		}
-	}
-
-	private drawSlide(): void {
-		for (let i = 0; i < this.map.slides.length; i++) {
-			const slide = this.map.slides[i];
-			if (this.getHeightByBeat(slide.notes[slide.notes.length - 1].beat) < this.scrollBottom) continue;
-			if (this.getHeightByBeat(slide.notes[0].beat) > this.scrollBottom + this.const.height + this.const.noteHeight) break;
-			for (let j = 0; j < slide.notes.length; j++) {
-				const note = slide.notes[j];
-				const next = slide.notes[j + 1];
-				const height = this.getHeightByBeat(note.beat);
-				// find next note has lane property
-				let nextCurve: PJSK.INoteSlideNote = next;
-				let nextCurveIndex = j;
-				if (next && next.lane === undefined) {
-					nextCurveIndex += 1 + slide.notes.slice(j + 1).findIndex(v => v.lane !== undefined);
-					nextCurve = slide.notes[nextCurveIndex];
-				}
-				// draw un-positioned slide visible note
-				if (note.lane !== undefined && nextCurve &&
-					height < this.scrollBottom + this.const.height + this.const.noteHeight &&
-					this.getHeightByBeat(nextCurve.beat) > this.scrollBottom - this.const.noteHeight) {
-					const nextHeight = this.getHeightByBeat(nextCurve.beat);
-					this.drawCurve(note, nextCurve, height, nextHeight, slide.critical);
-					if (next.lane === undefined) this.drawSkippedVisibleNote(slide, note, j + 1, nextCurveIndex);
-				}
-				if (height >= this.scrollBottom - this.const.noteHeight &&
-					height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
-					if ([PJSK.NoteType.SlideStart, PJSK.NoteType.SlideEndDefault].includes(note.type)) {
-						this.drawBaseNote(note, slide.critical ? 'critical' : 'slide', height, slide);
-					}
-					else if (note.type === PJSK.NoteType.SlideEndFlick) {
-						this.drawBaseNote(note, (note.critical || slide.critical) ? 'critical' : 'flick', height, slide);
-						// TODO do not hide flick arrow before scroll out of screen
-						this.drawFlickArrow({
-							...note,
-							critical: note?.critical || slide.critical
-						}, height);
-					} // TODO select slide node when clicking
-					else if (note.type === PJSK.NoteType.SlideInvisible) this.drawInvisibleNote(note, height, slide.critical);
-					else if (note.type === PJSK.NoteType.SlideVisible) {
-						this.drawVisibleNote(note, height, slide);
-					}
-					if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
-						this.drawSelectionRect(note, height);
-					}
-				}
-			}
-		}
-	}
-
 	private drawSelectionRect(note: PJSK.INoteTap | PJSK.INoteFlick | PJSK.INoteSlideNote, height: number) {
 		const rect = new PIXI.Graphics();
 		rect.name = `Selection-${note.id}`;
@@ -446,21 +239,6 @@ export class PJSKMapEditor {
 		this.container.cursor.y = y;
 		this.container.cursor.x = this.getLaneX(lane - 0.1);
 		this.container.cursor.visible = true;
-	}
-
-	private drawNote(): void {
-		for (let i = 0; i < this.map.notes.length; i++) {
-			const note = this.map.notes[i];
-			const height = this.getHeightByBeat(note.beat);
-			if (height >= this.scrollBottom - this.const.noteHeight && height <= this.scrollBottom + this.const.height + this.const.noteHeight) {
-				if (note.type === PJSK.NoteType.Flick) this.drawFlickArrow(note, height);
-				this.drawBaseNote(note, note.critical ? 'critical' : (note.type ? 'flick' : 'tap'), height);
-				if (this.selection.single.includes(note.id) || this.tempSelection.single.includes(note.id)) {
-					this.drawSelectionRect(note, height);
-				}
-			}
-			if (height > this.scrollBottom + this.const.height + this.const.noteHeight) break;
-		}
 	}
 
 	private isUniqueArrayEqual<T>(a: T[], b: T[]) {

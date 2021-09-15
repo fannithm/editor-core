@@ -1,3 +1,4 @@
+import PIXI from 'pixi.js';
 import { IMap, MapBeat } from '@fannithm/const/dist/pjsk';
 import { Fraction } from '@fannithm/utils';
 import { EventHandler } from '.';
@@ -51,6 +52,20 @@ export class Editor {
 		this.renderer.destroyContainers();
 		this.renderer.app.destroy(true, {
 			children: true
+		});
+	}
+
+	static loadResource(
+		onLoad?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void,
+		onError?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void): Promise<void> {
+		return new Promise<void>(resolve => {
+			const loader = PIXI.Loader.shared;
+			loader.add('images/sprite.json').load(() => {
+				console.log('load resources completed');
+				resolve();
+			});
+			onLoad && loader.onLoad.add(onLoad);
+			onError && loader.onError.add(onError);
 		});
 	}
 
