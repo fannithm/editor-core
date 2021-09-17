@@ -7,5 +7,6 @@ export * from './EventEmitter';
 export * from './EventHandler';
 export * from './Parser';
 export * from './Renderer';
-export * from './ScrollController'
+export * from './ScrollController';
+export * from './SelectionManager';
 export * from './TimeLineManager';

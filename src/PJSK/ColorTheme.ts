@@ -21,6 +21,8 @@ export const ColorTheme = {
 	slideCriticalCurve: 0xfcf9cd,
 	slideCriticalCurveAlpha: 0.8,
 	slideCriticalInvisibleNode: 0xf1e41d,
-	selection: 0x0390fc,
+	selectionBox: 0x0390fc,
+	selectionBoxAlpha: 0.2,
+	selectionRect: 0x0390fc,
 	cursor: 0x000000
-}
+};

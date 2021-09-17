@@ -1,9 +1,13 @@
 import { Editor } from './Editor';
+import PIXI from 'pixi.js';
 
 export class ScrollController {
-	private _scrollBottom = 0;
+	public _scrollBottom = 0;
+	public scrollTicker = new PIXI.Ticker();
+	public autoScrollDelta = 0;
 
 	constructor(private editor: Editor) {
+		this.scrollTicker.autoStart = false;
 	}
 
 	scrollTo(height: number): void {
@@ -17,9 +21,9 @@ export class ScrollController {
 	public set scrollBottom(scrollBottom: number) {
 		const newScrollBottom = Math.min(this.editor.const.maxHeight - this.editor.const.height, Math.max(0, scrollBottom));
 		if (newScrollBottom !== this.scrollBottom) {
-			const g = this.editor.event.dispatchScrollEvent(this.scrollBottom)
+			const oldScrollBottom = this._scrollBottom;
 			this._scrollBottom = newScrollBottom;
-			g.next(newScrollBottom);
+			this.editor.event.dispatchScrollEvent(oldScrollBottom, this._scrollBottom);
 		}
 		this.editor.renderer.render();
 	}

@@ -4,6 +4,7 @@ import SlideNote from './notes/SlideNote';
 import SlideVisibleNote from './notes/SlideVisibleNote';
 import SingleNote from './notes/TapNote';
 import { IRenderObjects } from './Parser';
+import { PJSK } from '@fannithm/const';
 
 export class Renderer {
 	private textures: Record<string, PIXI.Texture>;
@@ -17,6 +18,7 @@ export class Renderer {
 	};
 	public selectArea: PIXI.Graphics;
 	public app: PIXI.Application;
+
 	// private cursor: Cursor
 
 	constructor(private editor: Editor) {
@@ -44,7 +46,8 @@ export class Renderer {
 			slide: null,
 			arrow: null,
 			selection: null
-		}
+		};
+		this.renderSelectArea();
 		this.initContainers();
 		this.initLaneContainer();
 	}
@@ -74,22 +77,45 @@ export class Renderer {
 		this.renderCurves();
 		this.renderVisibleNodes();
 		this.renderInvisibleNodes();
+		this.renderSelectionBox();
 	}
 
 	renderOnce(): void {
 		this.renderLanes();
-		this.renderSelectArea();
 	}
 
 	private renderSelectArea(): void {
+		// select area
 		this.selectArea = new PIXI.Graphics();
 		this.selectArea.name = 'SelectArea';
+		this.selectArea.zIndex = 0;
+		this.selectArea.interactive = true;
 		this.selectArea.beginFill(this.editor.color.background, 1);
 		this.selectArea.drawRect(0, 0, this.editor.const.width, this.editor.const.height);
-		this.selectArea.zIndex = -1;
-		this.selectArea.interactive = true;
 		this.selectArea.endFill();
 		this.app.stage.addChild(this.selectArea);
+	}
+
+	private renderSelectionBox() {
+		const box = this.editor.selectionManager.selectionBox;
+		if (box[0] === box[2] || box[1] === box[3]) return;
+		const selectionBox = new PIXI.Graphics();
+		selectionBox.beginFill(this.editor.color.selectionBox, this.editor.color.selectionBoxAlpha);
+		selectionBox.lineStyle(this.editor.const.lineWidth, this.editor.color.selectionBox);
+		// TODO max width and max height out of box
+		const y = this.editor.calculator.getYInCanvas(box[1]);
+		const height = this.editor.calculator.getYInCanvas(box[3]) - y;
+		selectionBox.drawRect(box[0], y, box[2] - box[0], height);
+		selectionBox.endFill();
+		this.containers.selection.addChild(selectionBox);
+	}
+
+	private renderSelectionRect(name: string, x: number, y: number, width: number, height: number) {
+		const rect = new PIXI.Graphics();
+		rect.name = name;
+		rect.lineStyle(this.editor.const.lineWidth * 4, this.editor.color.selectionRect);
+		rect.drawRect(x, y, width, height);
+		this.containers.selection.addChild(rect);
 	}
 
 	private renderLanes(): void {
@@ -131,11 +157,15 @@ export class Renderer {
 			const object = texts[i];
 			const text = new PIXI.Text(object.text, {
 				fontSize: object.fontSize,
-				fill: object.color,
+				fill: object.color
 			});
 			text.name = object.name;
 			text.x = object.x - { left: 0, center: 0.5, right: 1 }[object.alignX || 'left'] * text.width;
-			text.y = this.editor.calculator.getYInCanvas(object.scrollHeight) - { top: 0, middle: 0.5, bottom: 1 }[object.alignY || 'bottom'] * text.height;
+			text.y = this.editor.calculator.getYInCanvas(object.scrollHeight) - {
+				top: 0,
+				middle: 0.5,
+				bottom: 1
+			}[object.alignY || 'bottom'] * text.height;
 			this.containers.time.addChild(text);
 		}
 	}
@@ -157,6 +187,13 @@ export class Renderer {
 			note.y = this.editor.calculator.getYInCanvas(object.scrollHeight) - this.editor.const.noteHeight / 2;
 			note.width = object.width / scale;
 			// note.on('click', slide === undefined ? this.singleClickHandler.bind(this) : this.slideClickHandler.bind(this));
+			// selection
+			if (this.editor.selectionManager.selection.single.includes(note.id) ||
+				this.editor.selectionManager.tempSelection.single.includes(note.id) ||
+				this.editor.selectionManager.selection.slide[object.slideId]?.includes(object.id) ||
+				this.editor.selectionManager.tempSelection.slide[object.slideId]?.includes(object.id)) {
+				this.renderSelectionRect(`SelectionRect-${ note.id }`, note.x, note.y, object.width, this.editor.const.noteHeight);
+			}
 			this.containers.note.addChild(note);
 		}
 	}
@@ -202,7 +239,7 @@ export class Renderer {
 					end[1]
 				);
 				curve.lineTo(object.endX + object.endWidth, this.editor.calculator.getYInCanvas(object.endScrollHeight));
-				start = [object.endX + object.endWidth, this.editor.calculator.getYInCanvas(object.endScrollHeight)]
+				start = [object.endX + object.endWidth, this.editor.calculator.getYInCanvas(object.endScrollHeight)];
 				end = [object.startX + object.startWidth, this.editor.calculator.getYInCanvas(object.startScrollHeight)];
 				const [x1, y1, x2, y2] = object.bezier;
 				const bezier = [1 - x2, 1 - y2, 1 - x1, 1 - y1];
@@ -237,7 +274,13 @@ export class Renderer {
 			sprite.y = this.editor.calculator.getYInCanvas(object.scrollHeight) - (sprite.height / 2);
 			// sprite.on('click', this.slideClickHandler.bind(this));
 			this.containers.slide.addChild(sprite);
+			if (this.editor.selectionManager.selection.slide[object.slideId]?.includes(object.id) ||
+				this.editor.selectionManager.tempSelection.slide[object.slideId]?.includes(object.id)) {
+				const padding = this.editor.calculator.getLaneWidth(0.1);
+				this.renderSelectionRect(`SelectionRect-${ object.id }`, object.x - padding, sprite.y, object.width + padding * 2, this.editor.const.noteHeight);
+			}
 		}
+
 	}
 
 	private renderInvisibleNodes(): void {
@@ -257,6 +300,12 @@ export class Renderer {
 			// line.interactive = true;
 			// line.on('click', this.slideClickHandler.bind(this));
 			this.containers.slide.addChild(line);
+			if (this.editor.selectionManager.selection.slide[object.slideId]?.includes(object.id) ||
+				this.editor.selectionManager.tempSelection.slide[object.slideId]?.includes(object.id)) {
+				const height = this.editor.const.noteHeight;
+				const padding = this.editor.calculator.getLaneWidth(0.2);
+				this.renderSelectionRect(`SelectionRect-${ object.id }`, object.x - padding, line.y - height / 2, object.width + padding * 2, height);
+			}
 		}
 	}
 

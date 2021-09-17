@@ -7,13 +7,14 @@ module.exports = {
 		node: true
 	},
 	plugins: [
-		'@typescript-eslint',
+		'@typescript-eslint'
 	],
 	extends: [
 		'eslint:recommended',
-		'plugin:@typescript-eslint/recommended',
+		'plugin:@typescript-eslint/recommended'
 	],
 	rules: {
-		'@typescript-eslint/quotes': ['error', 'single']
+		'@typescript-eslint/quotes': ['error', 'single'],
+		'@typescript-eslint/semi': ['error', 'always']
 	}
-}
+};

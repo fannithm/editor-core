@@ -1,9 +1,12 @@
 import convertor from '@fannithm/sus-fannithm-convertor';
 import { PJSK } from '..';
 import './style.css';
+import { EventType } from '../PJSK';
+import { ISelectEventDetail } from '../PJSK/old/PJSKEvent';
 
 (function () {
 	document.addEventListener('DOMContentLoaded', ready);
+
 	async function ready() {
 		console.log('ready');
 		const $add = document.getElementById('add') as HTMLInputElement;
@@ -19,7 +22,7 @@ import './style.css';
 		const $draw = document.getElementById('draw') as HTMLButtonElement;
 
 		await PJSK.Editor.loadResource((loader, resource) => {
-			console.log(`${loader.progress}% loading: ${resource.url}`);
+			console.log(`${ loader.progress }% loading: ${ resource.url }`);
 		});
 
 		const $app = document.getElementById('app') as HTMLButtonElement;

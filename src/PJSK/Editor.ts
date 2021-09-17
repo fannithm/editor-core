@@ -11,8 +11,25 @@ import { Parser } from './Parser';
 import { Renderer } from './Renderer';
 import { ScrollController } from './ScrollController';
 import { TimeLineManager } from './TimeLineManager';
+import { SelectionManager } from './SelectionManager';
 
-
+/**
+ * ## Usage
+ * ### Load resource first
+ * See {@link Editor.loadResource}
+ * ```js
+ * await PJSK.Editor.loadResource((loader, resource) => {
+ * 	console.log(`${loader.progress}% loading: ${resource.url}`);
+ * });
+ * ```
+ * ### Initialize
+ * See {@link Editor.constructor}
+ * ```js
+ * const editor = new PJSK.Editor.loadResource(document.getElementById("container"), map, time);
+ * editor.map = map;
+ * editor.time = time;
+ * ```
+ */
 export class Editor {
 	private _map: IMap;
 	private _beatSlice = 1;
@@ -25,19 +42,24 @@ export class Editor {
 	public scrollController: ScrollController;
 	public audioManager: AudioManager;
 	public timeLineManager: TimeLineManager;
+	public selectionManager: SelectionManager;
 	private _color: Record<string, number>;
 
+	/**
+	 * @param container Editor container for containing canvas element.
+	 */
 	constructor(public container: HTMLElement) {
 		this._color = ColorTheme;
 		this.const = new Constants(this);
-		this.event = new EventEmitter();
+		this.event = new EventEmitter(this);
 		this.handler = new EventHandler(this);
 		this.parser = new Parser(this);
 		this.calculator = new Calculator(this);
 		this.scrollController = new ScrollController(this);
 		this.audioManager = new AudioManager(this);
 		this.renderer = new Renderer(this);
-		this.timeLineManager = new TimeLineManager(this);
+		this.timeLineManager = new TimeLineManager();
+		this.selectionManager = new SelectionManager(this);
 		this.start();
 	}
 

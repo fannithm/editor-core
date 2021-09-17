@@ -13,7 +13,7 @@ export class Parser {
 		[1, .5, 1, 1],
 		[0, 0, 0, .5],
 		[1, .5, 0, .5]
-	]
+	];
 
 	constructor(private editor: Editor) {
 		this.initRenderObjects();
@@ -52,7 +52,7 @@ export class Parser {
 		const leftSpace = (100 - (laneNumber * laneWidth)) / 2;
 		for (let i = 0; i <= 12; i++) {
 			this.renderObjects.lanes.push({
-				name: `Lane-${i}`,
+				name: `Lane-${ i }`,
 				x: this.editor.const.width * ((i * laneWidth + leftSpace) / 100),
 				color: (i % 2) ? this.editor.color.secondaryLane : this.editor.color.primeLane,
 				alpha: (i % 2) ? this.editor.color.secondaryLaneAlpha : this.editor.color.primeLaneAlpha
@@ -69,7 +69,7 @@ export class Parser {
 			const height = this.editor.calculator.getHeightByTime(time);
 			if (height > this.editor.const.maxHeight - this.editor.const.spaceY) break;
 			const object: IRenderBeatLineObject = {
-				name: `BeatLine-${beat.decimal}`,
+				name: `BeatLine-${ beat.decimal }`,
 				x: this.editor.calculator.getLaneX(0),
 				width: this.editor.calculator.getLaneWidth(12),
 				scrollHeight: height,
@@ -81,7 +81,7 @@ export class Parser {
 				object.alpha = this.editor.color.beatLineWholeAlpha;
 				object.width = this.editor.const.width - this.editor.calculator.getLaneX(0);
 				this.renderObjects.texts.push({
-					name: `BeatLineText-${beat.decimal}`,
+					name: `BeatLineText-${ beat.decimal }`,
 					x: this.editor.const.width - this.editor.const.paddingX,
 					fontSize: this.editor.const.fontSize,
 					scrollHeight: height + this.editor.const.paddingY,
@@ -89,7 +89,7 @@ export class Parser {
 					alignY: 'bottom',
 					color: this.editor.color.beatLineWhole,
 					alpha: this.editor.color.beatLineWholeAlpha,
-					text: `${Math.floor((beat.integer) / 4) + 1}:${beat.integer % 4 + 1}`
+					text: `${ Math.floor((beat.integer) / 4) + 1 }:${ beat.integer % 4 + 1 }`
 				});
 			} else if (i % (slice / 2) === 0) {
 				object.color = this.editor.color.beatLineHalf;
@@ -106,7 +106,7 @@ export class Parser {
 	}
 
 	private formatTime(time: number): string {
-		return `${Math.floor(time / 60).toString().padStart(2, '0')}:${(time % 60).toFixed(3).padStart(6, '0')}`
+		return `${ Math.floor(time / 60).toString().padStart(2, '0') }:${ (time % 60).toFixed(3).padStart(6, '0') }`;
 	}
 
 	private parseBPMLines() {
@@ -117,16 +117,16 @@ export class Parser {
 			const bpmHeight = this.editor.calculator.getHeightByTime(bpmTime);
 			// bpm line
 			this.renderObjects.beatLines.push({
-				name: `BPM-${bpm.id}-line`,
+				name: `BPM-${ bpm.id }-line`,
 				x: 0,
 				width: this.editor.const.width,
 				scrollHeight: bpmHeight,
 				color: this.editor.color.bpmLine,
-				alpha: 1,
+				alpha: 1
 			});
 			// bpm text
 			this.renderObjects.texts.push({
-				name: `BPM-${bpm.id}-time`,
+				name: `BPM-${ bpm.id }-time`,
 				x: this.editor.const.paddingX,
 				scrollHeight: bpmHeight + this.editor.const.paddingY,
 				alignY: 'bottom',
@@ -137,7 +137,7 @@ export class Parser {
 			});
 			// bpm value
 			this.renderObjects.texts.push({
-				name: `BPM-${bpm.id}-value`,
+				name: `BPM-${ bpm.id }-value`,
 				x: this.editor.calculator.getLaneX(12) + this.editor.const.paddingX,
 				scrollHeight: bpmHeight + this.editor.const.paddingY,
 				alignY: 'bottom',
@@ -155,7 +155,7 @@ export class Parser {
 			const text = this.formatTime(i);
 			if (this.renderObjects.texts.some(v => v.text === text)) continue;
 			this.renderObjects.texts.push({
-				name: `Time-${i}`,
+				name: `Time-${ i }`,
 				x: this.editor.calculator.getLaneX(0) - this.editor.const.paddingX,
 				scrollHeight: height,
 				alignX: 'right',
@@ -164,7 +164,7 @@ export class Parser {
 				color: this.editor.color.timeText,
 				alpha: 1,
 				text
-			})
+			});
 		}
 	}
 
@@ -172,15 +172,15 @@ export class Parser {
 		const width = Math.min(6, note.width);
 		const renderWidth = Math.max(0.8, Math.min(4, width * 0.6));
 		this.renderObjects.arrows.push({
-			name: `Arrow-${note.id}`,
+			name: `Arrow-${ note.id }`,
 			x: this.editor.calculator.getLaneX(note.lane + (note.width - renderWidth) / 2),
 			width: this.editor.calculator.getLaneWidth(renderWidth),
 			scrollHeight: height,
-			texture: `flick_arrow_${note.critical ? 'critical_' : ''}${width.toString().padStart(2, '0')}${{
+			texture: `flick_arrow_${ note.critical ? 'critical_' : '' }${ width.toString().padStart(2, '0') }${ {
 				0: '',
 				1: '_left',
 				2: '_right'
-			}[note.direction]}`,
+			}[note.direction] }`,
 			id: note.id
 		});
 	}
@@ -194,7 +194,7 @@ export class Parser {
 				this.pushFlickObject(note, height);
 			}
 			this.renderObjects.notes.push({
-				name: `Note-${note.id}`,
+				name: `Note-${ note.id }`,
 				x: this.editor.calculator.getLaneX(note.lane - 0.1),
 				width: this.editor.calculator.getLaneWidth(note.width + 0.2),
 				scrollHeight: height,
@@ -202,10 +202,6 @@ export class Parser {
 				id: note.id,
 				alpha: 1
 			});
-			// TODO selection
-			/* if (this.selection.single.includes(note.id) || this.tempSelection.single.includes(note.id)) {
-				this.drawSelectionRect(note, height);
-			} */
 		}
 	}
 
@@ -223,11 +219,11 @@ export class Parser {
 			const lane = bezier ? startNote.lane + (endNote.lane - startNote.lane) * easing(progress) : startNote.lane;
 			const width = bezier ? startNote.width + (endNote.width - startNote.width) * easing(progress) : startNote.width;
 			this.renderObjects.visibleNodes.push({
-				name: `Visible-${note.id}`,
+				name: `Visible-${ note.id }`,
 				x: this.editor.calculator.getLaneX(lane),
 				width: this.editor.calculator.getLaneWidth(width),
 				scrollHeight: height,
-				texture: `slide_node${slide.critical ? '_critical' : ''}`,
+				texture: `slide_node${ slide.critical ? '_critical' : '' }`,
 				id: note.id,
 				slideId: slide.id
 			});
@@ -248,7 +244,7 @@ export class Parser {
 				// parse note
 				if ([NoteType.SlideStart, NoteType.SlideEndDefault].includes(note.type)) {
 					this.renderObjects.notes.push({
-						name: `SlideNote-${note.id}`,
+						name: `SlideNote-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane - 0.1),
 						width: this.editor.calculator.getLaneWidth(note.width + 0.2),
 						scrollHeight: height,
@@ -259,7 +255,7 @@ export class Parser {
 					});
 				} else if (note.type === NoteType.SlideEndFlick) {
 					this.renderObjects.notes.push({
-						name: `SlideEndFlick-${note.id}`,
+						name: `SlideEndFlick-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane - 0.1),
 						width: this.editor.calculator.getLaneWidth(note.width + 0.2),
 						scrollHeight: height,
@@ -271,7 +267,7 @@ export class Parser {
 					this.pushFlickObject(note, height);
 				} else if (note.type === NoteType.SlideInvisible) {
 					this.renderObjects.invisibleNodes.push({
-						name: `Invisible-${note.id}`,
+						name: `Invisible-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane + 0.1),
 						width: this.editor.calculator.getLaneWidth(note.width - 0.2),
 						scrollHeight: height,
@@ -281,11 +277,11 @@ export class Parser {
 					});
 				} else if (note.type === NoteType.SlideVisible) {
 					this.renderObjects.visibleNodes.push({
-						name: `Visible-${note.id}`,
+						name: `Visible-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane),
 						width: this.editor.calculator.getLaneWidth(note.width),
 						scrollHeight: height,
-						texture: `slide_node${slide.critical ? '_critical' : ''}`,
+						texture: `slide_node${ slide.critical ? '_critical' : '' }`,
 						id: note.id,
 						slideId: slide.id
 					});
@@ -295,14 +291,14 @@ export class Parser {
 				// 	this.drawSelectionRect(note, height);
 				// }
 				// parse curve
-				const next = slide.notes[j + 1]
+				const next = slide.notes[j + 1];
 				if (next === undefined) break;
 				if (next.lane === undefined) {
 					const end = slide.notes.findIndex((v, index) => index > j && v.lane !== undefined);
 					const endNote = slide.notes[end];
 					this.parseUnPositionedNote(slide, j, end);
 					this.renderObjects.curves.push({
-						name: `Curve-${note.id}`,
+						name: `Curve-${ note.id }`,
 						startX: this.editor.calculator.getLaneX(note.lane + 0.1),
 						startWidth: this.editor.calculator.getLaneWidth(note.width - 0.2),
 						startScrollHeight: height,
@@ -313,12 +309,12 @@ export class Parser {
 						color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
 						alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
 						id: note.id,
-						slideId: slide.id,
+						slideId: slide.id
 					});
 					j = end - 1;
 				} else {
 					this.renderObjects.curves.push({
-						name: `Curve-${note.id}`,
+						name: `Curve-${ note.id }`,
 						startX: this.editor.calculator.getLaneX(note.lane + 0.1),
 						startWidth: this.editor.calculator.getLaneWidth(note.width - 0.2),
 						startScrollHeight: height,
@@ -329,7 +325,7 @@ export class Parser {
 						color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
 						alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
 						id: note.id,
-						slideId: slide.id,
+						slideId: slide.id
 					});
 				}
 			}

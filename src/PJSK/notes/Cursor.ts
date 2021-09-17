@@ -9,12 +9,12 @@ export default class Cursor extends Container {
 
 	draw(lineWidth: number, cursorWidth: number, color: number): void {
 		const cursorX = new Graphics();
-		cursorX.lineStyle(lineWidth, color)
+		cursorX.lineStyle(lineWidth, color);
 		cursorX.moveTo(0, 0);
 		cursorX.lineTo(cursorWidth, 0);
 		this.addChild(cursorX);
 		const cursorY = new Graphics();
-		cursorY.lineStyle(lineWidth, color)
+		cursorY.lineStyle(lineWidth, color);
 		cursorY.moveTo(0, 0);
 		cursorY.lineTo(0, cursorWidth);
 		cursorY.x = cursorWidth / 2;
