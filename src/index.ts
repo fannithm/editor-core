@@ -3,7 +3,7 @@
  *
  * ## Guide
  *
- * Project Sekai Editor: {@link PJSKMapEditor}
+ * Project Sekai Editor: {@link Editor}
  *
  * BanG Dream Editor: Still not started
  * @module @fannithm/editor-core
