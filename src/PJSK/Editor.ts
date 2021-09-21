@@ -1,7 +1,7 @@
-import PIXI from 'pixi.js';
+import * as PIXI from 'pixi.js';
 import { IMap, MapBeat } from '@fannithm/const/dist/pjsk';
 import { Fraction } from '@fannithm/utils';
-import { EventHandler } from '.';
+import { EventHandler } from './EventHandler';
 import { AudioManager } from './AudioManager';
 import { Calculator } from './Calculator';
 import { ColorTheme } from './ColorTheme';
@@ -12,6 +12,7 @@ import { Renderer } from './Renderer';
 import { ScrollController } from './ScrollController';
 import { TimeLineManager } from './TimeLineManager';
 import { SelectionManager } from './SelectionManager';
+import { CursorManager } from './CursorManager';
 
 /**
  * ## Usage
@@ -43,6 +44,7 @@ export class Editor {
 	public audioManager: AudioManager;
 	public timeLineManager: TimeLineManager;
 	public selectionManager: SelectionManager;
+	public cursorManager: CursorManager;
 	private _color: Record<string, number>;
 
 	/**
@@ -60,6 +62,7 @@ export class Editor {
 		this.renderer = new Renderer(this);
 		this.timeLineManager = new TimeLineManager();
 		this.selectionManager = new SelectionManager(this);
+		this.cursorManager = new CursorManager(this);
 		this.start();
 	}
 
@@ -93,7 +96,7 @@ export class Editor {
 
 	set map(map: IMap) {
 		this._map = map;
-		if (this.timeLineManager.visible.length === 0) {
+		if (!this.timeLineManager.visible.some(v => this.map.timelines.map(t => t.id).includes(v))) {
 			this.timeLineManager.visible = [this.map.timelines[0].id];
 		}
 		this.renderer.parseAndRender();

@@ -168,7 +168,7 @@ export class Parser {
 		}
 	}
 
-	private pushFlickObject(note: INoteFlick | INoteSlideEndFlick, height: number) {
+	private pushFlickObject(note: INoteFlick | INoteSlideEndFlick, height: number, slideCritical = false) {
 		const width = Math.min(6, note.width);
 		const renderWidth = Math.max(0.8, Math.min(4, width * 0.6));
 		this.renderObjects.arrows.push({
@@ -176,7 +176,7 @@ export class Parser {
 			x: this.editor.calculator.getLaneX(note.lane + (note.width - renderWidth) / 2),
 			width: this.editor.calculator.getLaneWidth(renderWidth),
 			scrollHeight: height,
-			texture: `flick_arrow_${ note.critical ? 'critical_' : '' }${ width.toString().padStart(2, '0') }${ {
+			texture: `flick_arrow_${ note.critical || slideCritical ? 'critical_' : '' }${ width.toString().padStart(2, '0') }${ {
 				0: '',
 				1: '_left',
 				2: '_right'
@@ -264,7 +264,7 @@ export class Parser {
 						slideId: slide.id,
 						alpha: 1
 					});
-					this.pushFlickObject(note, height);
+					this.pushFlickObject(note, height, slide.critical);
 				} else if (note.type === NoteType.SlideInvisible) {
 					this.renderObjects.invisibleNodes.push({
 						name: `Invisible-${ note.id }`,
@@ -286,10 +286,6 @@ export class Parser {
 						slideId: slide.id
 					});
 				}
-				// TODO selection
-				// if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
-				// 	this.drawSelectionRect(note, height);
-				// }
 				// parse curve
 				const next = slide.notes[j + 1];
 				if (next === undefined) break;

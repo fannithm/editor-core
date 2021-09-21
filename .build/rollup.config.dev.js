@@ -21,11 +21,7 @@ export default {
 	},
 	external: ['pixi.js'],
 	plugins: [
-		resolve({
-			customResolveOptions: {
-				moduleDirectories: ['node_modules']
-			}
-		}),
+		resolve(),
 		commonjs(),
 		html2({
 			template: 'src/test/index.html',

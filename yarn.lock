@@ -52,22 +52,17 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@fannithm/const@^0.1.0-snapshot.3":
-  version "0.1.0-snapshot.4"
-  resolved "https://npm.pkg.github.com/download/@fannithm/const/0.1.0-snapshot.4/631a786fd1bc36d00686fdd424fc24156daeebcd2d408d617b8dab0acc248ce0#afe730c071498319fdcc223c89556aad397b2227"
-  integrity sha512-L5J4kpFmSRq4LEbvJVj50o3i5cSe3iCo4QSCB/jmChNyrwxpii9t8z00uzSgKNrtFXkEkgfc/7Q7/CYKl3G6Tw==
-
 "@fannithm/const@^0.1.0-snapshot.6":
   version "0.1.0-snapshot.6"
   resolved "https://npm.pkg.github.com/download/@fannithm/const/0.1.0-snapshot.6/cc862feb15438f9949c521ebe6902b6a6fbee6b3fd160d9eb507d31953d5584d#7ed7b4d1b6155d350a107494ae7de33d643aa488"
   integrity sha512-QKYUtoqs3ZMhefx55sBMqhVWAb/gL9N2XUynkqiig7BomUJ+1oPwkCHpLS7e12QSS7Z/qsB0Eun1UE+CaMjBxQ==
 
-"@fannithm/sus-fannithm-convertor@^1.2.0":
-  version "1.2.1"
-  resolved "https://npm.pkg.github.com/download/@fannithm/sus-fannithm-convertor/1.2.1/70b25d111546164bb67f0f8c88f5be651e967aa84ec2974ec0e29e0025920c82#0890ec9f0d443a3d9ad96dce3ea1fe398453ed32"
-  integrity sha512-LBIjQJTEG13W5yK1Wf+Fe70rH/P/2eJnk7qFNygfdLKAswOPr8fkw4GMV2KvSSrEWh7QLzQSKQv50qciv2c6vA==
+"@fannithm/sus-fannithm-convertor@^1.2.4":
+  version "1.2.4"
+  resolved "https://npm.pkg.github.com/download/@fannithm/sus-fannithm-convertor/1.2.4/1020d9ecee06b56c722f780bef86d76f3234c23143c2c9ec547f1d7570bf0cac#cd43c4e67d1e40c504131634d8a76b0736faf7d5"
+  integrity sha512-T+n2Do8j7q5NbelswKuEumBgCnRMNL0mZO620/Mb+AcQfgMFS3A7oSUKnB/GnFWzR1BYN1AzH1BJv6p1JX2qhg==
   dependencies:
-    "@fannithm/const" "^0.1.0-snapshot.3"
+    "@fannithm/const" "^0.1.0-snapshot.6"
     sus-analyzer "^2.2.4"
     uuid "^8.3.2"
 

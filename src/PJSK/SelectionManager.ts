@@ -96,6 +96,90 @@ export class SelectionManager {
 		find(renderObject.visibleNodes);
 		find(renderObject.invisibleNodes);
 	}
+
+	/**
+	 * Get selected note.
+	 * @param selection
+	 */
+	public getNotesBySelection(selection: IEditorSelection): IEditorSelectionNote {
+		return {
+			single: selection.single.map(id => {
+				return this.editor.map.notes.find(note => note.id === id);
+			}),
+			slide: Object.keys(selection.slide).map(id => {
+				const slide = this.editor.map.slides.find(v => v.id === id);
+				return {
+					...slide,
+					notes: slide.notes.filter(note => {
+						return selection.slide[id].includes(note.id);
+					})
+				};
+			})
+		};
+	}
+
+	/**
+	 * Delete note by selection
+	 * @param selection
+	 * @returns deleted note
+	 */
+	public deleteNotesBySelection(selection: IEditorSelection): IEditorSelectionNote {
+		const deletedNote: IEditorSelectionNote = {
+			single: [],
+			slide: []
+		};
+		this.editor.map.notes = this.editor.map.notes.filter(note => {
+			if (selection.single.includes(note.id)) {
+				deletedNote.single.push(note);
+				return false;
+			}
+			return true;
+		});
+		this.editor.map.slides = this.editor.map.slides.map(slide => {
+			if (!selection.slide[slide.id]) return slide;
+			deletedNote.slide.push({
+				...slide,
+				notes: []
+			});
+			slide.notes = slide.notes.filter((note, index) => {
+				if (selection.slide[slide.id].includes(note.id)) {
+					const deletedSlide = deletedNote.slide.find(v => v.id === slide.id);
+					deletedSlide.notes.push(note);
+					if ((index === 0 || index === slide.notes.length - 1) && slide.notes.length !== 2) {
+						const neighborNote = slide.notes[index + (index === 0 ? 1 : -1)];
+						// change start/end note type
+						neighborNote.type = note.type;
+						// check un-positioned note
+						if (neighborNote.lane === undefined) {
+							deletedSlide.notes.push({
+								...neighborNote
+							});
+							neighborNote.width = note.width;
+							neighborNote.lane = note.lane;
+							neighborNote.curve = note.curve;
+							if (note.bezier !== undefined) neighborNote.bezier = note.bezier;
+							// end flick
+							if ((note as PJSK.INoteSlideEndFlick).direction !== undefined)
+								(neighborNote as PJSK.INoteSlideEndFlick).direction = (note as PJSK.INoteSlideEndFlick).direction;
+							if ((note as PJSK.INoteSlideEndFlick).critical !== undefined)
+								(neighborNote as PJSK.INoteSlideEndFlick).critical = (note as PJSK.INoteSlideEndFlick).critical;
+						}
+					}
+					return false;
+				}
+				return true;
+			});
+			return slide;
+		}).filter(slide => {
+			// check slide notes length
+			if (slide.notes.length === 1) {
+				deletedNote.slide.find(v => v.id === slide.id).notes.push(slide.notes[0]);
+			}
+			return slide.notes.length > 1;
+		});
+		this.editor.renderer.parseAndRender();
+		return deletedNote;
+	}
 }
 
 export interface IEditorSelection {

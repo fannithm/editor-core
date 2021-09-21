@@ -1,5 +1,5 @@
 import { Editor } from './Editor';
-import PIXI from 'pixi.js';
+import * as PIXI from 'pixi.js';
 
 export class ScrollController {
 	public _scrollBottom = 0;
