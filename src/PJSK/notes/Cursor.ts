@@ -7,7 +7,7 @@ export default class Cursor extends Container {
 		this.draw(lineWidth, cursorWidth, color);
 	}
 
-	draw(lineWidth: number, cursorWidth: number, color: number): void {
+	private draw(lineWidth: number, cursorWidth: number, color: number): void {
 		const cursorX = new Graphics();
 		cursorX.lineStyle(lineWidth, color);
 		cursorX.moveTo(0, 0);

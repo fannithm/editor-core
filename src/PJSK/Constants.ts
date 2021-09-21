@@ -89,16 +89,17 @@ export class Constants {
 		return this._heightPerSecond;
 	}
 
-	public get heightPerSecond(): number {
-		return this._heightPerSecond / this.resolution;
-	}
-
-	public set heightPerSecond(heightPerSecond: number) {
+	public set heightPerSecondRaw(heightPerSecond: number) {
 		if (heightPerSecond < 100 || heightPerSecond > 2000) return;
 		const time = (this.editor.scrollController.scrollBottom - this.spaceY) / this._heightPerSecond;
-		this._heightPerSecond = heightPerSecond / this.resolution;
+		this._heightPerSecond = heightPerSecond;
+		// console.log(heightPerSecond);
 		this.editor.scrollController.scrollTo(time * this._heightPerSecond + this.spaceY);
-		this.editor.renderer.render();
+		this.editor.renderer.parseAndRender();
+	}
+
+	public get heightPerSecond(): number {
+		return this._heightPerSecond / this.resolution;
 	}
 
 	public get spaceY(): number {
@@ -138,7 +139,7 @@ export class Constants {
 	}
 
 	public get cursorLineWidth(): number {
-		return this._cursorLineWidth;
+		return this._cursorLineWidth / this.resolution;
 	}
 
 	public get noteHeightRaw(): number {
@@ -162,7 +163,7 @@ export class Constants {
 	}
 
 	public get arrowHeight(): number {
-		return this._arrowHeight;
+		return this._arrowHeight / this.resolution;
 	}
 }
 

@@ -1,4 +1,4 @@
-import PIXI from 'pixi.js';
+import * as PIXI from 'pixi.js';
 import { EventType } from './EventEmitter';
 import { Editor } from './Editor';
 import { ScrollController } from './ScrollController';
@@ -7,7 +7,7 @@ import { SelectionManager } from './SelectionManager';
 export class EventHandler {
 	private readonly windowMouseUpHandler: () => void;
 	private readonly selectAreaMouseMoveWhenMouseDownHandler: () => void;
-	private readonly lastMousePosition: {
+	public readonly lastMousePosition: {
 		x: number,
 		y: number
 	};
@@ -34,18 +34,10 @@ export class EventHandler {
 		// scroll ticker
 		this.scrollController.scrollTicker.add(this.scrollTickerHandler.bind(this));
 
-		/* // selection rect
-		 this.oldSelection = {
-		 single: [],
-		 slide: {}
-		 };
-
-
-		 // move cursor
-		 this.event.addEventListener(PJSKEvent.Type.Scroll, () => {
-		 const [beat, lane] = this.getCursorPosition();
-		 this.moveCursor(beat, lane);
-		 }); */
+		this.editor.event.on(EventType.Scroll, () => {
+			const [beat, lane] = this.editor.cursorManager.getCursorPosition();
+			this.editor.renderer.updateCursorPosition(beat, lane);
+		});
 	}
 
 	private mouseWheelHandler(event: WheelEvent): void {
@@ -116,8 +108,8 @@ export class EventHandler {
 	private selectAreaMouseMoveHandler(event: PIXI.InteractionEvent) {
 		this.lastMousePosition.x = event.data.global.x;
 		this.lastMousePosition.y = event.data.global.y;
-		// const [beat, lane] = this.getCursorPosition();
-		// this.moveCursor(beat, lane);
+		const [beat, lane] = this.editor.cursorManager.getCursorPosition();
+		this.editor.renderer.updateCursorPosition(beat, lane);
 	}
 
 	private scrollTickerHandler(): void {

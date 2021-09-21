@@ -1,13 +1,14 @@
-import PIXI from 'pixi.js';
+import * as PIXI from 'pixi.js';
 import { Editor } from './Editor';
 import SlideNote from './notes/SlideNote';
 import SlideVisibleNote from './notes/SlideVisibleNote';
 import SingleNote from './notes/TapNote';
 import { IRenderObjects } from './Parser';
-import { PJSK } from '@fannithm/const';
+import Cursor from './notes/Cursor';
+import { Fraction } from '@fannithm/utils';
 
 export class Renderer {
-	private textures: Record<string, PIXI.Texture>;
+	private readonly textures: Record<string, PIXI.Texture>;
 	private containers: {
 		lane: PIXI.Container;
 		time: PIXI.Container;
@@ -18,8 +19,7 @@ export class Renderer {
 	};
 	public selectArea: PIXI.Graphics;
 	public app: PIXI.Application;
-
-	// private cursor: Cursor
+	private readonly cursor: Cursor;
 
 	constructor(private editor: Editor) {
 		this.textures = PIXI.Loader.shared.resources['images/sprite.json'].textures;
@@ -34,11 +34,13 @@ export class Renderer {
 		this.app.view.style.width = width + 'px';
 		this.app.view.style.height = height + 'px';
 		this.editor.container.appendChild(this.app.view);
-		// this.app.stage.addChild(this.editor.container.cursor);
-		// this.container.cursor.visible = false;
-		// this.container.cursor.zIndex = 15;
 		this.app.stage.sortableChildren = true;
 		this.app.stage.interactive = true;
+		// cursor
+		this.cursor = new Cursor(this.editor.const.cursorLineWidth, this.editor.calculator.getLaneWidth(1.2), this.editor.color.cursor);
+		this.cursor.visible = false;
+		this.cursor.zIndex = 15;
+		this.app.stage.addChild(this.cursor);
 		this.containers = {
 			lane: null,
 			time: null,
@@ -71,6 +73,7 @@ export class Renderer {
 		this.destroyContainers();
 		this.initContainers();
 		this.renderBeatLines();
+		this.renderCurrentTimeLine();
 		this.renderTexts();
 		this.renderNotes();
 		this.renderArrows();
@@ -144,6 +147,20 @@ export class Renderer {
 			line.moveTo(object.x, 0);
 			line.lineTo(object.x + object.width, 0);
 			line.y = this.editor.calculator.getYInCanvas(object.scrollHeight);
+			this.containers.time.addChild(line);
+		}
+	}
+
+	private renderCurrentTimeLine(): void {
+		const height = this.editor.calculator.getHeightByTime(this.editor.audioManager.currentTime);
+		if (height >= this.editor.scrollController.scrollBottom && height <= this.editor.scrollController.scrollBottom + this.editor.const.height) {
+			const line = new PIXI.Graphics();
+			line.name = 'Time-line';
+			line.lineStyle(this.editor.const.lineWidth, this.editor.color.currentTimeLine, 1);
+			line.moveTo(0, 0);
+			line.lineTo(this.editor.const.width * 0.8, 0);
+			line.x = this.editor.const.width * 0.1;
+			line.y = this.editor.calculator.getYInCanvas(height);
 			this.containers.time.addChild(line);
 		}
 	}
@@ -307,6 +324,17 @@ export class Renderer {
 				this.renderSelectionRect(`SelectionRect-${ object.id }`, object.x - padding, line.y - height / 2, object.width + padding * 2, height);
 			}
 		}
+	}
+
+	updateCursorPosition(beat: Fraction, lane: number): void {
+		const height = this.editor.calculator.getHeightByBeat(beat, this.editor.timeLineManager.prime);
+		if (height > this.editor.const.maxHeight - this.editor.const.spaceY || lane < 0 || lane > 11) {
+			this.cursor.visible = false;
+			return;
+		}
+		this.cursor.x = this.editor.calculator.getLaneX(lane - 0.1);
+		this.cursor.y = this.editor.calculator.getYInCanvas(height);
+		this.cursor.visible = true;
 	}
 
 	initContainers(): void {

@@ -1,5 +1,6 @@
-import PIXI from 'pixi.js';
+import * as PIXI from 'pixi.js';
 import { Editor } from './Editor';
+import { IEditorSelection } from './SelectionManager';
 
 /**
  * See [eventemitter3](https://github.com/primus/eventemitter3).
@@ -63,7 +64,7 @@ export interface IScrollEvent {
 	newScrollBottom: number;
 }
 
-// export interface ISelectEventDetail {
-// 	oldSelection: IEditorSelection,
-// 	newSelection: IEditorSelection
-// }
+export interface ISelectEvent {
+	oldSelection: IEditorSelection,
+	newSelection: IEditorSelection
+}

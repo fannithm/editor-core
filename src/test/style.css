@@ -17,6 +17,6 @@ body {
 }
 
 #app {
-	height: calc(100% - 80px);
-	/* max-width: 600px; */
+	height: calc(100% - 85px);
+	 max-width: 600px;
 }

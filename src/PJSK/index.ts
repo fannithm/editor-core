@@ -2,6 +2,7 @@ export * from './AudioManager';
 export * from './Calculator';
 export * from './ColorTheme';
 export * from './Constants';
+export * from './CursorManager';
 export * from './Editor';
 export * from './EventEmitter';
 export * from './EventHandler';
