@@ -28,6 +28,12 @@ export class EventEmitter extends PIXI.utils.EventEmitter {
 		}
 	}
 
+	dispatchAudioTimeUpdateEvent(): void {
+		this.emit(EventType.AudioTimeUpdate, {
+			currentTime: this.editor.audioManager.currentTime
+		});
+	}
+
 	dispatchDestroyEvent(): void {
 		this.emit(EventType.Destroy);
 	}
@@ -37,7 +43,7 @@ export enum EventType {
 	/**
 	 * Emitted when scroll bottom of the editor is changed.
 	 *
-	 * See {@link IScrollEventDetail}
+	 * See {@link IScrollEvent}
 	 * @event scroll
 	 */
 	Scroll = 'scroll',
@@ -50,7 +56,12 @@ export enum EventType {
 	 * Emitted when selected note has changed.
 	 * @event select
 	 */
-	Select = 'select'
+	Select = 'select',
+	/**
+	 * Emitted when audio time update
+	 * @event audioTimeUpdate
+	 */
+	AudioTimeUpdate = 'audioTimeUpdate'
 }
 
 export interface IScrollEvent {
@@ -67,4 +78,8 @@ export interface IScrollEvent {
 export interface ISelectEvent {
 	oldSelection: IEditorSelection,
 	newSelection: IEditorSelection
+}
+
+export interface IAudioTimeUpdateEvent {
+	currentTime: number;
 }

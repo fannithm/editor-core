@@ -2,16 +2,17 @@ import * as PIXI from 'pixi.js';
 import { Editor } from './Editor';
 
 export class AudioManager {
-	private _currentTime = 0;
 	private _totalTime = 10;
 	private _follow = false;
+	private audio: HTMLAudioElement;
 	private audioContext: AudioContext;
-	private audioSource: AudioBufferSourceNode;
-	private playTicker: PIXI.Ticker;
+	private audioSource: MediaElementAudioSourceNode;
+	playTicker: PIXI.Ticker;
 	private _playing = false;
 
 	constructor(private editor: Editor) {
-		this.audioContext = new AudioContext();
+		this.playTicker = new PIXI.Ticker();
+		this.playTicker.autoStart = false;
 	}
 
 	private async getBuffer(url: string): Promise<AudioBuffer> {
@@ -20,43 +21,50 @@ export class AudioManager {
 		return this.audioContext.decodeAudioData(buffer);
 	}
 
-	async loadAudio(): Promise<void> {
-
+	loadAudio(file: File): void {
+		this.audio = new Audio();
+		this.audioContext = new AudioContext();
+		this.audio.addEventListener('loadeddata', () => {
+			this.editor.renderer.render();
+		});
+		this.audio.addEventListener('ended', () => {
+			this._playing = false;
+		});
+		this.audio.src = URL.createObjectURL(file);
+		this.audioSource = this.audioContext.createMediaElementSource(this.audio);
+		this.audioSource.connect(this.audioContext.destination);
 	}
 
-	async play(file: File): Promise<void> {
-		const buffer = await this.getBuffer(URL.createObjectURL(file));
-		this.audioSource = this.audioContext.createBufferSource();
-		this.audioSource.buffer = buffer;
-		if (this.playing || !this.audioSource) return;
-		this.audioSource.connect(this.audioContext.destination);
-		this.audioSource.start(this.currentTime);
+	async play(): Promise<void> {
+		if (!this.audio || this.playing) return;
+		await this.audio.play();
 		this._playing = true;
+		this.playTicker.start();
+	}
+
+	stop(): void {
+		this.pause();
+		this.currentTime = 0;
+		this.editor.renderer.updateCurrentTimeLine();
 	}
 
 	pause(): void {
 		if (!this.playing || !this.audioSource) return;
-		this.currentTime = this.audioContext.currentTime;
-		this.audioSource.disconnect(this.audioContext.destination);
-		this.audioSource.stop();
+		this.audio.pause();
 		this._playing = false;
-	}
-
-	resume(): void {
+		this.playTicker.stop();
 	}
 
 	public get currentTime(): number {
-		return this._currentTime;
+		return this.audio?.currentTime || 0;
 	}
 
-	public set currentTime(currentTime: number) {
-		// TODO scrollBottom
-		this._currentTime = currentTime;
-		this.editor.renderer.render();
+	public set currentTime(time: number) {
+		if (this.audio) this.audio.currentTime = time;
 	}
 
 	public get totalTime(): number {
-		return this._totalTime;
+		return this.audio?.duration || this._totalTime;
 	}
 
 	public set totalTime(totalTime: number) {

@@ -137,37 +137,39 @@ export class SelectionManager {
 		});
 		this.editor.map.slides = this.editor.map.slides.map(slide => {
 			if (!selection.slide[slide.id]) return slide;
-			deletedNote.slide.push({
+			const deletedSlide = {
 				...slide,
 				notes: []
-			});
-			slide.notes = slide.notes.filter((note, index) => {
+			};
+			deletedNote.slide.push(deletedSlide);
+			slide.notes = slide.notes.filter((note) => {
 				if (selection.slide[slide.id].includes(note.id)) {
-					const deletedSlide = deletedNote.slide.find(v => v.id === slide.id);
 					deletedSlide.notes.push(note);
-					if ((index === 0 || index === slide.notes.length - 1) && slide.notes.length !== 2) {
-						const neighborNote = slide.notes[index + (index === 0 ? 1 : -1)];
-						// change start/end note type
-						neighborNote.type = note.type;
-						// check un-positioned note
-						if (neighborNote.lane === undefined) {
-							deletedSlide.notes.push({
-								...neighborNote
-							});
-							neighborNote.width = note.width;
-							neighborNote.lane = note.lane;
-							neighborNote.curve = note.curve;
-							if (note.bezier !== undefined) neighborNote.bezier = note.bezier;
-							// end flick
-							if ((note as PJSK.INoteSlideEndFlick).direction !== undefined)
-								(neighborNote as PJSK.INoteSlideEndFlick).direction = (note as PJSK.INoteSlideEndFlick).direction;
-							if ((note as PJSK.INoteSlideEndFlick).critical !== undefined)
-								(neighborNote as PJSK.INoteSlideEndFlick).critical = (note as PJSK.INoteSlideEndFlick).critical;
-						}
-					}
 					return false;
 				}
 				return true;
+			});
+			slide.notes.forEach((note, index) => {
+				/*if ((index === 0 || index === slide.notes.length - 1) && slide.notes.length !== 2) {
+				 const neighborNote = slide.notes[index + (index === 0 ? 1 : -1)];
+				 // change start/end note type
+				 neighborNote.type = note.type;
+				 // check un-positioned note
+				 if (neighborNote.lane === undefined) {
+				 deletedSlide.notes.push({
+				 ...neighborNote
+				 });
+				 neighborNote.width = note.width;
+				 neighborNote.lane = note.lane;
+				 neighborNote.curve = note.curve;
+				 if (note.bezier !== undefined) neighborNote.bezier = note.bezier;
+				 // end flick
+				 if ((note as PJSK.INoteSlideEndFlick).direction !== undefined)
+				 (neighborNote as PJSK.INoteSlideEndFlick).direction = (note as PJSK.INoteSlideEndFlick).direction;
+				 if ((note as PJSK.INoteSlideEndFlick).critical !== undefined)
+				 (neighborNote as PJSK.INoteSlideEndFlick).critical = (note as PJSK.INoteSlideEndFlick).critical;
+				 }
+				 }*/
 			});
 			return slide;
 		}).filter(slide => {

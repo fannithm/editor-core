@@ -46,7 +46,6 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 			if (!$text.value) return;
 			const map = convertor($text.value);
 			setMap(map);
-			editor.scrollController.scrollTo(0);
 		});
 
 		const $add = document.getElementById('add') as HTMLInputElement;
@@ -87,6 +86,20 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 
 		$pause.addEventListener('click', () => {
 			editor.audioManager.pause();
+		});
+
+		$stop.addEventListener('click', () => {
+			editor.audioManager.stop();
+		});
+
+		$follow.addEventListener('input', () => {
+			editor.audioManager.follow = $follow.checked;
+		});
+
+		const $delete = document.getElementById('delete') as HTMLButtonElement;
+
+		$delete.addEventListener('click', () => {
+			editor.selectionManager.deleteNotesBySelection(editor.selectionManager.selection);
 		});
 
 		const res = await fetch('map/lzn.json');

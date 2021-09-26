@@ -13,6 +13,7 @@ export class Constants {
 	private _cursorLineWidth = 3;
 	private _noteHeight = 32;
 	private _arrowHeight = 32;
+	private _curveRenderStep = 8;
 
 	constructor(public editor: Editor) {
 		const { width, height } = this.editor.container.getBoundingClientRect();
@@ -93,8 +94,7 @@ export class Constants {
 		if (heightPerSecond < 100 || heightPerSecond > 2000) return;
 		const time = (this.editor.scrollController.scrollBottom - this.spaceY) / this._heightPerSecond;
 		this._heightPerSecond = heightPerSecond;
-		// console.log(heightPerSecond);
-		this.editor.scrollController.scrollTo(time * this._heightPerSecond + this.spaceY);
+		this.editor.scrollController.scrollBottom = time * this._heightPerSecond + this.spaceY;
 		this.editor.renderer.parseAndRender();
 	}
 
@@ -164,6 +164,18 @@ export class Constants {
 
 	public get arrowHeight(): number {
 		return this._arrowHeight / this.resolution;
+	}
+
+	get curveRenderStepRaw(): number {
+		return this._curveRenderStep;
+	}
+
+	set curveRenderStepRaw(curveRenderStep: number) {
+		this._curveRenderStep = curveRenderStep;
+	}
+
+	get curveRenderStep(): number {
+		return this._curveRenderStep / this.resolution;
 	}
 }
 
