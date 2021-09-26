@@ -1,7 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
-import eslint from '@rollup/plugin-eslint';
 import html2 from 'rollup-plugin-html2';
 import spritesmith from '@zz5840/rollup-plugin-sprite';
 import postcss from 'rollup-plugin-postcss';
@@ -9,7 +8,7 @@ import filesize from 'rollup-plugin-filesize';
 import { uglify } from 'rollup-plugin-uglify';
 
 export default {
-	input: 'src/old/test/test.ts',
+	input: 'src/test/test.ts',
 	output: {
 		dir: 'dist',
 		entryFileNames: 'bundle-[hash].js',
@@ -54,7 +53,6 @@ export default {
 			}
 		}),
 		postcss(),
-		eslint(),
 		typescript(),
 		uglify(),
 		filesize()
