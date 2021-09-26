@@ -17,8 +17,9 @@ export class Renderer {
 		arrow: PIXI.Container;
 		selection: PIXI.Container;
 	};
-	public selectArea: PIXI.Graphics;
+	public background: PIXI.Graphics;
 	public app: PIXI.Application;
+	private currentTimeLine: PIXI.Graphics;
 	private readonly cursor: Cursor;
 
 	constructor(private editor: Editor) {
@@ -49,7 +50,6 @@ export class Renderer {
 			arrow: null,
 			selection: null
 		};
-		this.renderSelectArea();
 		this.initContainers();
 		this.initLaneContainer();
 	}
@@ -73,7 +73,6 @@ export class Renderer {
 		this.destroyContainers();
 		this.initContainers();
 		this.renderBeatLines();
-		this.renderCurrentTimeLine();
 		this.renderTexts();
 		this.renderNotes();
 		this.renderArrows();
@@ -81,22 +80,26 @@ export class Renderer {
 		this.renderVisibleNodes();
 		this.renderInvisibleNodes();
 		this.renderSelectionBox();
+		this.updateCurrentTimeLine();
 	}
+
 
 	renderOnce(): void {
+		this.renderBackground();
 		this.renderLanes();
+		this.renderCurrentTimeLine();
 	}
 
-	private renderSelectArea(): void {
-		// select area
-		this.selectArea = new PIXI.Graphics();
-		this.selectArea.name = 'SelectArea';
-		this.selectArea.zIndex = 0;
-		this.selectArea.interactive = true;
-		this.selectArea.beginFill(this.editor.color.background, 1);
-		this.selectArea.drawRect(0, 0, this.editor.const.width, this.editor.const.height);
-		this.selectArea.endFill();
-		this.app.stage.addChild(this.selectArea);
+	private renderBackground(): void {
+		// background
+		this.background = new PIXI.Graphics();
+		this.background.name = 'Background';
+		this.background.zIndex = -1;
+		this.background.interactive = true;
+		this.background.beginFill(this.editor.color.background, 1);
+		this.background.drawRect(0, 0, this.editor.const.width, this.editor.const.height);
+		this.background.endFill();
+		this.app.stage.addChild(this.background);
 	}
 
 	private renderSelectionBox() {
@@ -152,17 +155,15 @@ export class Renderer {
 	}
 
 	private renderCurrentTimeLine(): void {
-		const height = this.editor.calculator.getHeightByTime(this.editor.audioManager.currentTime);
-		if (height >= this.editor.scrollController.scrollBottom && height <= this.editor.scrollController.scrollBottom + this.editor.const.height) {
-			const line = new PIXI.Graphics();
-			line.name = 'Time-line';
-			line.lineStyle(this.editor.const.lineWidth, this.editor.color.currentTimeLine, 1);
-			line.moveTo(0, 0);
-			line.lineTo(this.editor.const.width * 0.8, 0);
-			line.x = this.editor.const.width * 0.1;
-			line.y = this.editor.calculator.getYInCanvas(height);
-			this.containers.time.addChild(line);
-		}
+		this.currentTimeLine = new PIXI.Graphics();
+		this.currentTimeLine.name = 'CurrentTime-line';
+		this.currentTimeLine.lineStyle(this.editor.const.lineWidth, this.editor.color.currentTimeLine, 1);
+		this.currentTimeLine.moveTo(0, 0);
+		this.currentTimeLine.lineTo(this.editor.const.width * 0.8, 0);
+		this.currentTimeLine.x = this.editor.const.width * 0.1;
+		this.currentTimeLine.y = this.editor.calculator.getYInCanvas(0);
+		this.currentTimeLine.zIndex = 5;
+		this.app.stage.addChild(this.currentTimeLine);
 	}
 
 	private renderTexts(): void {
@@ -242,36 +243,12 @@ export class Renderer {
 			const object = curves[i];
 			const curve = new PIXI.Graphics();
 			curve.name = object.name;
-			if (object.bezier) {
-				let start = [object.startX, this.editor.calculator.getYInCanvas(object.startScrollHeight)];
-				let end = [object.endX, this.editor.calculator.getYInCanvas(object.endScrollHeight)];
-				curve.beginFill(object.color, object.alpha);
-				curve.moveTo(start[0], start[1]);
-				curve.bezierCurveTo(
-					start[0] + object.bezier[0] * (end[0] - start[0]),
-					start[1] + object.bezier[1] * (end[1] - start[1]),
-					start[0] + object.bezier[2] * (end[0] - start[0]),
-					start[1] + object.bezier[3] * (end[1] - start[1]),
-					end[0],
-					end[1]
-				);
-				curve.lineTo(object.endX + object.endWidth, this.editor.calculator.getYInCanvas(object.endScrollHeight));
-				start = [object.endX + object.endWidth, this.editor.calculator.getYInCanvas(object.endScrollHeight)];
-				end = [object.startX + object.startWidth, this.editor.calculator.getYInCanvas(object.startScrollHeight)];
-				const [x1, y1, x2, y2] = object.bezier;
-				const bezier = [1 - x2, 1 - y2, 1 - x1, 1 - y1];
-				curve.bezierCurveTo(
-					start[0] + bezier[0] * (end[0] - start[0]),
-					start[1] + bezier[1] * (end[1] - start[1]),
-					start[0] + bezier[2] * (end[0] - start[0]),
-					start[1] + bezier[3] * (end[1] - start[1]),
-					end[0],
-					end[1]
-				);
-				curve.endFill();
-			} else {
-				//
+			curve.beginFill(object.color, object.alpha);
+			curve.moveTo(object.points[0].x, this.editor.calculator.getYInCanvas(object.points[0].scrollHeight));
+			for (let j = 1; j < object.points.length; j++) {
+				curve.lineTo(object.points[j].x, this.editor.calculator.getYInCanvas(object.points[j].scrollHeight));
 			}
+			curve.endFill();
 			this.containers.slide.addChild(curve);
 		}
 	}
@@ -337,6 +314,16 @@ export class Renderer {
 		this.cursor.visible = true;
 	}
 
+	updateCurrentTimeLine(): void {
+		if (!this.currentTimeLine) return;
+		const height = this.editor.calculator.getHeightByTime(this.editor.audioManager.currentTime);
+		const visible = height >= this.editor.scrollController.scrollBottom && height <= this.editor.scrollController.scrollBottom + this.editor.const.height;
+		this.currentTimeLine.visible = visible;
+		if (visible) {
+			this.currentTimeLine.y = this.editor.calculator.getYInCanvas(height);
+		}
+	}
+
 	initContainers(): void {
 		this.containers.time = new PIXI.Container();
 		this.containers.note = new PIXI.Container();
@@ -352,7 +339,7 @@ export class Renderer {
 		this.containers.arrow.zIndex = 2;
 		this.containers.slide.zIndex = 3;
 		this.containers.note.zIndex = 4;
-		this.containers.selection.zIndex = 5;
+		this.containers.selection.zIndex = 6;
 		this.app.stage.addChild(this.containers.time);
 		this.app.stage.addChild(this.containers.note);
 		this.app.stage.addChild(this.containers.slide);

@@ -26,13 +26,15 @@ export class EventHandler {
 		this.editor.renderer.app.view.addEventListener('wheel', this.mouseWheelHandler.bind(this));
 
 		// mouse down
-		this.editor.renderer.selectArea.on('mousedown', this.selectAreaMouseDownHandler.bind(this));
+		this.editor.renderer.app.stage.on('mousedown', this.selectAreaMouseDownHandler.bind(this));
 
 		// mouse move
-		this.editor.renderer.selectArea.on('mousemove', this.selectAreaMouseMoveHandler.bind(this));
+		this.editor.renderer.app.stage.on('mousemove', this.selectAreaMouseMoveHandler.bind(this));
 
 		// scroll ticker
 		this.scrollController.scrollTicker.add(this.scrollTickerHandler.bind(this));
+
+		this.editor.audioManager.playTicker.add(this.audioPlayTickerHandler.bind(this));
 
 		this.editor.event.on(EventType.Scroll, () => {
 			const [beat, lane] = this.editor.cursorManager.getCursorPosition();
@@ -60,7 +62,7 @@ export class EventHandler {
 		const y = this.editor.scrollController.scrollBottom + (this.editor.const.height - point.y);
 		this.editor.selectionManager.selectionBox = [x, y, x, y];
 
-		this.editor.renderer.selectArea.on('mousemove', this.selectAreaMouseMoveWhenMouseDownHandler);
+		this.editor.renderer.app.stage.on('mousemove', this.selectAreaMouseMoveWhenMouseDownHandler);
 		this.editor.event.on(EventType.Scroll, this.selectAreaMouseMoveWhenMouseDownHandler);
 		this.editor.renderer.render();
 		window.addEventListener('mouseup', this.windowMouseUpHandler);
@@ -91,7 +93,7 @@ export class EventHandler {
 	private _windowMouseUpHandler() {
 		window.removeEventListener('mouseup', this.windowMouseUpHandler);
 		this.selectionManager.selectionBox = [0, 0, 0, 0];
-		this.editor.renderer.selectArea.off('mousemove', this.selectAreaMouseMoveWhenMouseDownHandler);
+		this.editor.renderer.app.stage.off('mousemove', this.selectAreaMouseMoveWhenMouseDownHandler);
 		this.editor.event.off(EventType.Scroll, this.selectAreaMouseMoveWhenMouseDownHandler);
 		this.scrollController.autoScrollDelta = 0;
 		this.scrollController.scrollTicker.stop();
@@ -108,12 +110,23 @@ export class EventHandler {
 	private selectAreaMouseMoveHandler(event: PIXI.InteractionEvent) {
 		this.lastMousePosition.x = event.data.global.x;
 		this.lastMousePosition.y = event.data.global.y;
+		if (!this.editor.map) return;
 		const [beat, lane] = this.editor.cursorManager.getCursorPosition();
 		this.editor.renderer.updateCursorPosition(beat, lane);
 	}
 
 	private scrollTickerHandler(): void {
 		this.editor.scrollController.scrollTo(this.editor.scrollController.scrollBottom + this.editor.scrollController.autoScrollDelta);
+	}
+
+	private audioPlayTickerHandler(): void {
+		this.editor.event.dispatchAudioTimeUpdateEvent();
+		if (!this.editor.audioManager.follow)
+			this.editor.renderer.updateCurrentTimeLine();
+		else {
+			const height = this.editor.calculator.getHeightByTime(this.editor.audioManager.currentTime);
+			this.editor.scrollController.scrollBottom = height - this.editor.const.spaceY;
+		}
 	}
 
 	private get selectionManager(): SelectionManager {

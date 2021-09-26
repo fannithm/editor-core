@@ -10,9 +10,9 @@ export class Parser {
 	private bezier = [
 		false,
 		[0, 0, 1, 1],
-		[1, .5, 1, 1],
-		[0, 0, 0, .5],
-		[1, .5, 0, .5]
+		[0.11, 0, 0.5, 0],
+		[0.5, 1, 0.89, 1],
+		[0.45, 0, 0.55, 1]
 	];
 
 	constructor(private editor: Editor) {
@@ -210,7 +210,10 @@ export class Parser {
 		const endNote = slide.notes[end];
 		const startHeight = this.editor.calculator.getHeightByBeat(this.editor.fraction(startNote.beat), slide.timeline);
 		const endHeight = this.editor.calculator.getHeightByBeat(this.editor.fraction(endNote.beat), slide.timeline);
-		const bezier = [...this.bezier, startNote.bezier][startNote.curve];
+		const bezier = [
+			...this.bezier,
+			startNote.bezier
+		][startNote.curve];
 		const easing = bezier && bezierEasing(bezier[0], bezier[1], bezier[2], bezier[3]);
 		for (let i = start + 1; i < end; i++) {
 			const note = slide.notes[i];
@@ -227,10 +230,6 @@ export class Parser {
 				id: note.id,
 				slideId: slide.id
 			});
-			// TODO selection
-			// if (this.selection.slide[slide.id]?.includes(note.id) || this.tempSelection.slide[slide.id]?.includes(note.id)) {
-			// 	this.drawSelectionRect(_note, height);
-			// }
 		}
 	}
 
@@ -287,45 +286,60 @@ export class Parser {
 					});
 				}
 				// parse curve
-				const next = slide.notes[j + 1];
+				let next = slide.notes[j + 1];
 				if (next === undefined) break;
 				if (next.lane === undefined) {
 					const end = slide.notes.findIndex((v, index) => index > j && v.lane !== undefined);
-					const endNote = slide.notes[end];
+					next = slide.notes[end];
 					this.parseUnPositionedNote(slide, j, end);
-					this.renderObjects.curves.push({
-						name: `Curve-${ note.id }`,
-						startX: this.editor.calculator.getLaneX(note.lane + 0.1),
-						startWidth: this.editor.calculator.getLaneWidth(note.width - 0.2),
-						startScrollHeight: height,
-						endX: this.editor.calculator.getLaneX(endNote.lane + 0.1),
-						endWidth: this.editor.calculator.getLaneWidth(endNote.width - 0.2),
-						endScrollHeight: this.editor.calculator.getHeightByBeat(this.editor.fraction(endNote.beat), slide.timeline),
-						bezier: [...this.bezier, note.bezier][note.curve] as false | number[],
-						color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
-						alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
-						id: note.id,
-						slideId: slide.id
-					});
 					j = end - 1;
-				} else {
-					this.renderObjects.curves.push({
-						name: `Curve-${ note.id }`,
-						startX: this.editor.calculator.getLaneX(note.lane + 0.1),
-						startWidth: this.editor.calculator.getLaneWidth(note.width - 0.2),
-						startScrollHeight: height,
-						endX: this.editor.calculator.getLaneX(next.lane + 0.1),
-						endWidth: this.editor.calculator.getLaneWidth(next.width - 0.2),
-						endScrollHeight: this.editor.calculator.getHeightByBeat(this.editor.fraction(next.beat), slide.timeline),
-						bezier: [...this.bezier, note.bezier][note.curve] as false | number[],
-						color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
-						alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
-						id: note.id,
-						slideId: slide.id
-					});
 				}
+				this.renderObjects.curves.push({
+					name: `Curve-${ note.id }`,
+					startScrollHeight: height,
+					endScrollHeight: this.editor.calculator.getHeightByBeat(this.editor.fraction(next.beat), slide.timeline),
+					points: [
+						...this.getCurvePoints(
+							this.editor.calculator.getLaneX(note.lane + 0.1),
+							height,
+							this.editor.calculator.getLaneX(next.lane + 0.1),
+							this.editor.calculator.getHeightByBeat(this.editor.fraction(next.beat), slide.timeline),
+							[...this.bezier, note.bezier][note.curve] as false | number[]
+						),
+						...this.getCurvePoints(
+							this.editor.calculator.getLaneX(note.lane + note.width - 0.1),
+							height,
+							this.editor.calculator.getLaneX(next.lane + next.width - 0.1),
+							this.editor.calculator.getHeightByBeat(this.editor.fraction(next.beat), slide.timeline),
+							[...this.bezier, note.bezier][note.curve] as false | number[]
+						).reverse()
+					],
+					color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
+					alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
+					id: note.id,
+					slideId: slide.id
+				});
 			}
 		}
+	}
+
+	private getCurvePoints(startX: number, startScrollHeight: number, endX: number, endScrollHeight: number, bezier: number[] | false): IRenderCurvePoint[] {
+		if (!bezier) return [
+			{ x: startX, scrollHeight: startScrollHeight },
+			{ x: endX, scrollHeight: endScrollHeight }
+		];
+		const step = this.editor.const.curveRenderStep;
+		const length = Math.ceil((endScrollHeight - startScrollHeight) / step);
+		const easing = bezierEasing(bezier[0], bezier[1], bezier[2], bezier[3]);
+		const dx = endX - startX;
+		const dy = endScrollHeight - startScrollHeight;
+		return new Array(length + 1).fill(0).map((v, i) => {
+			const p = Math.min(1, (i * step) / (endScrollHeight - startScrollHeight));
+			return {
+				x: startX + easing(p) * dx,
+				scrollHeight: startScrollHeight + p * dy
+			};
+		});
 	}
 
 	private get map() {
@@ -386,15 +400,21 @@ export interface IRenderNoteObject {
 	slideId?: string;
 }
 
+export interface IRenderCurvePoint {
+	x: number;
+	scrollHeight: number;
+}
+
 export interface IRenderCurveObject {
 	name: string;
-	startX: number;
-	startWidth: number;
+	// startX: number;
+	// startWidth: number;
 	startScrollHeight: number;
-	endX: number;
-	endWidth: number;
+	// endX: number;
+	// endWidth: number;
 	endScrollHeight: number;
-	bezier: number[] | false,
+	// bezier: number[] | false;
+	points: IRenderCurvePoint[];
 	color: number;
 	alpha: number;
 	id: string;

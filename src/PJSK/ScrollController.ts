@@ -10,7 +10,15 @@ export class ScrollController {
 		this.scrollTicker.autoStart = false;
 	}
 
+	/**
+	 * Scroll to scrollBottom.
+	 * This method will affect audio time if `audioManager.follow` is true.
+	 * @param height
+	 */
 	scrollTo(height: number): void {
+		if (this.editor.audioManager.follow) {
+			this.editor.audioManager.currentTime = height / this.editor.const.heightPerSecond;
+		}
 		this.scrollBottom = height;
 	}
 
