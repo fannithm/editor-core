@@ -102,6 +102,11 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 			editor.selectionManager.deleteNotesBySelection(editor.selectionManager.selection);
 		});
 
+		const $slice = document.getElementById('slice') as HTMLSelectElement;
+		$slice.addEventListener('change', () => {
+			editor.beatSlice = parseInt($slice.value);
+		});
+
 		const res = await fetch('map/lzn.json');
 		const map = await res.json();
 		setMap(map);

@@ -326,7 +326,7 @@ export class Parser {
 	private getCurvePoints(startX: number, startScrollHeight: number, endX: number, endScrollHeight: number, bezier: number[] | false): IRenderCurvePoint[] {
 		if (!bezier) return [
 			{ x: startX, scrollHeight: startScrollHeight },
-			{ x: endX, scrollHeight: endScrollHeight }
+			{ x: startX, scrollHeight: endScrollHeight }
 		];
 		const step = this.editor.const.curveRenderStep;
 		const length = Math.ceil((endScrollHeight - startScrollHeight) / step);
