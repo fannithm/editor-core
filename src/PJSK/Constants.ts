@@ -10,7 +10,7 @@ export class Constants {
 	private _heightPerSecond = 500;
 	private _lineWidth = 1;
 	private _invisibleLineWidth = 3;
-	private _cursorLineWidth = 3;
+	private _cursorLineWidth = 4;
 	private _noteHeight = 32;
 	private _arrowHeight = 32;
 	private _curveRenderStep = 8;

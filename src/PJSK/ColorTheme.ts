@@ -24,5 +24,10 @@ export const ColorTheme = {
 	selectionBox: 0x0390fc,
 	selectionBoxAlpha: 0.2,
 	selectionRect: 0x0390fc,
-	cursor: 0x000000
+	cursorDefault: 0x000000,
+	cursorTap: 0x58c6ea,
+	cursorCritical: 0xfbff6c,
+	cursorFlick: 0xf89bb2,
+	cursorSlide: 0x42e88c,
+	cursorBpm: 0x00ffff
 };
