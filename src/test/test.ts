@@ -1,26 +1,29 @@
 import convertor from '@fannithm/sus-fannithm-convertor';
-import { PJSK } from '..';
 import './style.css';
-import { EventType, IScrollEvent } from '../PJSK';
+import { Editor, EventType, EditorCursorType, IScrollEvent } from '../PJSK';
 import { IMap } from '@fannithm/const/dist/pjsk';
 
 (function () {
+	function $(s: string) {
+		return document.querySelector(s);
+	}
+
 	document.addEventListener('DOMContentLoaded', ready);
 
 	async function ready() {
 		console.log('ready');
 
-		await PJSK.Editor.loadResource((loader, resource) => {
+		await Editor.loadResource((loader, resource) => {
 			console.log(`${ loader.progress }% loading: ${ resource.url }`);
 		});
 
-		const $app = document.getElementById('app') as HTMLButtonElement;
-		const editor = new PJSK.Editor($app);
+		const $app = $('#app') as HTMLButtonElement;
+		const editor = new Editor($app);
 		console.log(editor);
 
-		const $load = document.getElementById('load') as HTMLButtonElement;
-		const $id = document.getElementById('id') as HTMLInputElement;
-		const $diff = document.getElementById('diff') as HTMLSelectElement;
+		const $load = $('#load') as HTMLButtonElement;
+		const $id = $('#id') as HTMLInputElement;
+		const $diff = $('#diff') as HTMLSelectElement;
 		const setMap = (map: IMap) => {
 			editor.map = map;
 			editor.beatSlice = 1;
@@ -33,10 +36,10 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 			setMap(map);
 		});
 
-		const $input = document.getElementById('input') as HTMLButtonElement;
-		const $container = document.getElementById('container') as HTMLDivElement;
-		const $text = document.getElementById('text') as HTMLTextAreaElement;
-		const $draw = document.getElementById('draw') as HTMLButtonElement;
+		const $input = $('#input') as HTMLButtonElement;
+		const $container = $('#container') as HTMLDivElement;
+		const $text = $('#text') as HTMLTextAreaElement;
+		const $draw = $('#draw') as HTMLButtonElement;
 
 		$input.addEventListener('click', () => {
 			$container.style.display = $container.style.display === 'none' ? 'block' : 'none';
@@ -48,8 +51,8 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 			setMap(map);
 		});
 
-		const $add = document.getElementById('add') as HTMLInputElement;
-		const $minus = document.getElementById('minus') as HTMLSelectElement;
+		const $add = $('#add') as HTMLInputElement;
+		const $minus = $('#minus') as HTMLSelectElement;
 		const scaleEditor = (scale: number) => {
 			editor.const.heightPerSecondRaw *= scale;
 		};
@@ -60,8 +63,8 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 			scaleEditor(1 / 1.5);
 		});
 
-		const $bottom = document.getElementById('bottom') as HTMLInputElement;
-		const $scroll = document.getElementById('scroll') as HTMLButtonElement;
+		const $bottom = $('#bottom') as HTMLInputElement;
+		const $scroll = $('#scroll') as HTMLButtonElement;
 		editor.event.on(EventType.Scroll, (event: IScrollEvent) => {
 			$bottom.value = event.newScrollBottom.toString();
 		});
@@ -69,11 +72,16 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 			editor.scrollController.scrollTo(parseInt($bottom.value));
 		});
 
-		const $music = document.getElementById('music') as HTMLInputElement;
-		const $play = document.getElementById('play') as HTMLButtonElement;
-		const $pause = document.getElementById('pause') as HTMLButtonElement;
-		const $stop = document.getElementById('stop') as HTMLButtonElement;
-		const $follow = document.getElementById('follow') as HTMLInputElement;
+		const $slice = $('#slice') as HTMLSelectElement;
+		$slice.addEventListener('change', () => {
+			editor.beatSlice = parseInt($slice.value);
+		});
+
+		const $music = $('#music') as HTMLInputElement;
+		const $play = $('#play') as HTMLButtonElement;
+		const $pause = $('#pause') as HTMLButtonElement;
+		const $stop = $('#stop') as HTMLButtonElement;
+		const $follow = $('#follow') as HTMLInputElement;
 
 		$music.addEventListener('input', () => {
 			const file = $music.files[0];
@@ -96,21 +104,27 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 			editor.audioManager.follow = $follow.checked;
 		});
 
-		const $delete = document.getElementById('delete') as HTMLButtonElement;
+		const $delete = $('#delete') as HTMLButtonElement;
 
 		$delete.addEventListener('click', () => {
-			editor.selectionManager.deleteNotesBySelection(editor.selectionManager.selection);
+			console.log(editor.selectionManager.getNotesBySelection(editor.selectionManager.selection));
 		});
 
-		const $slice = document.getElementById('slice') as HTMLSelectElement;
-		$slice.addEventListener('change', () => {
-			editor.beatSlice = parseInt($slice.value);
-		});
+		const changeNoteType = (type: EditorCursorType) => {
+			return () => {
+				editor.cursorManager.type = type;
+			};
+		};
+
+		$('#note-default').addEventListener('click', changeNoteType(EditorCursorType.Default));
+		$('#note-tap').addEventListener('click', changeNoteType(EditorCursorType.Tap));
+		$('#note-flick').addEventListener('click', changeNoteType(EditorCursorType.Flick));
+		$('#note-slide').addEventListener('click', changeNoteType(EditorCursorType.Slide));
+		$('#note-bpm').addEventListener('click', changeNoteType(EditorCursorType.BPM));
 
 		const res = await fetch('map/lzn.json');
 		const map = await res.json();
 		setMap(map);
 	}
 })();
-
 

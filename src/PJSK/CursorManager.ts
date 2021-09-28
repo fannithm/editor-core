@@ -1,7 +1,13 @@
 import { Editor } from './Editor';
 import { Fraction } from '@fannithm/utils';
+import { FlickDirection } from '@fannithm/const/dist/pjsk';
 
 export class CursorManager {
+	public critical = false;
+	public width = 3;
+	public direction = FlickDirection.Up;
+	private _type = EditorCursorType.Default;
+
 	constructor(private editor: Editor) {
 	}
 
@@ -31,4 +37,29 @@ export class CursorManager {
 			}
 		}
 	}
+
+
+	get type(): EditorCursorType {
+		return this._type;
+	}
+
+	set type(value: EditorCursorType) {
+		this._type = value;
+		this.editor.renderer.cursorColor = {
+			[EditorCursorType.Default]: this.editor.color.cursorDefault,
+			[EditorCursorType.Tap]: this.critical ? this.editor.color.cursorCritical : this.editor.color.cursorTap,
+			[EditorCursorType.Flick]: this.critical ? this.editor.color.cursorCritical : this.editor.color.cursorFlick,
+			[EditorCursorType.Slide]: this.critical ? this.editor.color.cursorCritical : this.editor.color.cursorSlide,
+			[EditorCursorType.BPM]: this.editor.color.cursorBpm
+		}[value];
+	}
+}
+
+
+export enum EditorCursorType {
+	Default = 0,
+	Tap = 1,
+	Flick = 2,
+	Slide = 3,
+	BPM = 4
 }

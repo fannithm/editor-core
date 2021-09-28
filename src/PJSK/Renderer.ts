@@ -358,5 +358,9 @@ export class Renderer {
 	get renderObjects(): IRenderObjects {
 		return this.editor.parser.renderObjects;
 	}
+
+	set cursorColor(color: number) {
+		this.cursor.lineColor = color;
+	}
 }
 
