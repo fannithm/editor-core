@@ -7,6 +7,7 @@ export class Constants {
 	private _fontSize = 18;
 	private _paddingX = 4;
 	private _paddingY = 2;
+	private _spaceY = 200;
 	private _heightPerSecond = 500;
 	private _lineWidth = 1;
 	private _invisibleLineWidth = 3;
@@ -102,8 +103,16 @@ export class Constants {
 		return this._heightPerSecond / this.resolution;
 	}
 
+	public get spaceYRaw(): number {
+		return this._spaceY;
+	}
+
+	public set spaceYRaw(spaceY: number) {
+		this._spaceY = spaceY;
+	}
+
 	public get spaceY(): number {
-		return this.heightPerSecond / 2;
+		return this._spaceY / this.resolution;
 	}
 
 	public get lineWidthRaw(): number {

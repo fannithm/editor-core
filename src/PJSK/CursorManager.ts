@@ -3,19 +3,20 @@ import { Fraction } from '@fannithm/utils';
 import { FlickDirection } from '@fannithm/const/dist/pjsk';
 
 export class CursorManager {
-	public critical = false;
-	public width = 3;
+	private _critical = false;
+	private _width = 4;
 	public direction = FlickDirection.Up;
 	private _type = EditorCursorType.Default;
+	public positionX: number;
+	public positionY: Fraction;
 
 	constructor(private editor: Editor) {
 	}
 
 	/**
-	 * Get the current position of the cursor.
-	 * @returns the beat and the lane of the cursor
+	 * Calculate the current position of the cursor.
 	 */
-	getCursorPosition(): [Fraction, number] {
+	calculateCursorPosition(): void {
 		const mouseHeight = this.editor.scrollController.scrollBottom + this.editor.const.height - this.editor.handler.lastMousePosition.y;
 		let lastNegative = 0;
 		let lastBeat = this.editor.fraction([0, 0, 1]);
@@ -32,8 +33,14 @@ export class CursorManager {
 			if (height >= mouseHeight) {
 				const positive = height - mouseHeight;
 				const x = this.editor.handler.lastMousePosition.x - this.editor.calculator.getLaneX(0);
-				const lane = Math.floor(x / (this.editor.const.width * 0.06));
-				return [positive < lastNegative ? beat : lastBeat, lane];
+				const cursorLane = Math.floor(x / (this.editor.const.width * 0.06));
+				const cursorBeat = positive < lastNegative ? beat : lastBeat;
+				if (cursorLane != this.positionX || !cursorBeat.eq(this.positionY)) {
+					this.positionX = cursorLane;
+					this.positionY = cursorBeat;
+					this.editor.event.dispatchCursorMoveEvent();
+				}
+				return;
 			}
 		}
 	}
@@ -44,14 +51,29 @@ export class CursorManager {
 	}
 
 	set type(value: EditorCursorType) {
+		if (this._type === EditorCursorType.Default && value !== this._type) {
+			this.editor.selectionManager.emptySelection();
+		}
 		this._type = value;
-		this.editor.renderer.cursorColor = {
-			[EditorCursorType.Default]: this.editor.color.cursorDefault,
-			[EditorCursorType.Tap]: this.critical ? this.editor.color.cursorCritical : this.editor.color.cursorTap,
-			[EditorCursorType.Flick]: this.critical ? this.editor.color.cursorCritical : this.editor.color.cursorFlick,
-			[EditorCursorType.Slide]: this.critical ? this.editor.color.cursorCritical : this.editor.color.cursorSlide,
-			[EditorCursorType.BPM]: this.editor.color.cursorBpm
-		}[value];
+		this.editor.renderer.parseAndRender();
+	}
+
+	get width(): number {
+		return this._width;
+	}
+
+	set width(value: number) {
+		this._width = Math.max(1, Math.min(12, value));
+		this.editor.renderer.parseAndRender();
+	}
+
+	get critical(): boolean {
+		return this._critical;
+	}
+
+	set critical(value: boolean) {
+		this._critical = value;
+		this.editor.renderer.parseAndRender();
 	}
 }
 
