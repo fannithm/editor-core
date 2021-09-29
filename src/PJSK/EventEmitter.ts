@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { Editor } from './Editor';
 import { IEditorSelection } from './SelectionManager';
+import { Fraction } from '@fannithm/utils';
 
 /**
  * See [eventemitter3](https://github.com/primus/eventemitter3).
@@ -34,6 +35,13 @@ export class EventEmitter extends PIXI.utils.EventEmitter {
 		});
 	}
 
+	dispatchCursorMoveEvent(): void {
+		this.emit(EventType.CursorMove, {
+			positionX: this.editor.cursorManager.positionX,
+			positionY: this.editor.cursorManager.positionY
+		});
+	}
+
 	dispatchDestroyEvent(): void {
 		this.emit(EventType.Destroy);
 	}
@@ -53,15 +61,20 @@ export enum EventType {
 	 */
 	Destroy = 'destroy',
 	/**
-	 * Emitted when selected note has changed.
+	 * Emitted when selected notes are changed.
 	 * @event select
 	 */
 	Select = 'select',
 	/**
-	 * Emitted when audio time update
+	 * Emitted when audio time is updated
 	 * @event audioTimeUpdate
 	 */
-	AudioTimeUpdate = 'audioTimeUpdate'
+	AudioTimeUpdate = 'audioTimeUpdate',
+	/**
+	 * Emitted when cursor is moved
+	 * @event cursorMove
+	 */
+	CursorMove = 'cursorMove'
 }
 
 export interface IScrollEvent {
@@ -82,4 +95,9 @@ export interface ISelectEvent {
 
 export interface IAudioTimeUpdateEvent {
 	currentTime: number;
+}
+
+export interface ICursorMoveEvent {
+	positionX: number,
+	positionY: Fraction
 }

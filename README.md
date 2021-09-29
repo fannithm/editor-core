@@ -35,10 +35,6 @@ yarn add @fannithm/editor-core
 
 View [docs.opensource.fannithm.xyz](https://docs.opensource.fannithm.xyz/) for detail documentation.
 
-## BUGs
-
-1. `maxHeight` calculate error.
-
 ## License
 
 [AGPL-3.0](https://github.com/fannithm/editor-core/blob/master/LICENSE)

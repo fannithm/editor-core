@@ -25,7 +25,7 @@ export class AudioManager {
 		this.audio = new Audio();
 		this.audioContext = new AudioContext();
 		this.audio.addEventListener('loadeddata', () => {
-			this.editor.renderer.render();
+			this.editor.renderer.parseAndRender();
 		});
 		this.audio.addEventListener('ended', () => {
 			this._playing = false;

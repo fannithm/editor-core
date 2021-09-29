@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import { Editor } from './Editor';
 import SlideNote from './notes/SlideNote';
 import SlideVisibleNote from './notes/SlideVisibleNote';
-import SingleNote from './notes/TapNote';
+import SingleNote from './notes/SingleNote';
 import { IRenderObjects } from './Parser';
 import Cursor from './notes/Cursor';
 import { Fraction } from '@fannithm/utils';
@@ -20,7 +20,7 @@ export class Renderer {
 	public background: PIXI.Graphics;
 	public app: PIXI.Application;
 	private currentTimeLine: PIXI.Graphics;
-	private readonly cursor: Cursor;
+	public readonly cursor: Cursor;
 
 	constructor(private editor: Editor) {
 		this.textures = PIXI.Loader.shared.resources['images/sprite.json'].textures;
@@ -38,7 +38,7 @@ export class Renderer {
 		this.app.stage.sortableChildren = true;
 		this.app.stage.interactive = true;
 		// cursor
-		this.cursor = new Cursor(this.editor.const.cursorLineWidth, this.editor.calculator.getLaneWidth(1.2), this.editor.color.cursor);
+		this.cursor = new Cursor(this.editor.const.cursorLineWidth, this.editor.calculator.getLaneWidth(1.2), this.editor.color.cursor, this.textures);
 		this.cursor.visible = false;
 		this.cursor.zIndex = 15;
 		this.app.stage.addChild(this.cursor);
@@ -204,6 +204,7 @@ export class Renderer {
 			note.x = object.x;
 			note.y = this.editor.calculator.getYInCanvas(object.scrollHeight) - this.editor.const.noteHeight / 2;
 			note.width = object.width / scale;
+			note.alpha = object.alpha;
 			// note.on('click', slide === undefined ? this.singleClickHandler.bind(this) : this.slideClickHandler.bind(this));
 			// selection
 			if (this.editor.selectionManager.selection.single.includes(note.id) ||
@@ -357,10 +358,6 @@ export class Renderer {
 
 	get renderObjects(): IRenderObjects {
 		return this.editor.parser.renderObjects;
-	}
-
-	set cursorColor(color: number) {
-		this.cursor.lineColor = color;
 	}
 }
 

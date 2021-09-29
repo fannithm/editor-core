@@ -1,16 +1,16 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Texture } from 'pixi.js';
 
 export default class Cursor extends Container {
 	private cursorX: Graphics;
 	private cursorY: Graphics;
 
-	constructor(private lineWidth: number, private cursorWidth: number, private _lineColor: number) {
+	constructor(private lineWidth: number, private cursorWidth: number, private lineColor: number, private textures: Record<string, Texture>) {
 		super();
 		this.name = 'Cursor';
-		this.draw();
+		this.drawCursor();
 	}
 
-	private draw(): void {
+	private drawCursor(): void {
 		this.cursorX = new Graphics();
 		this.cursorX.lineStyle(this.lineWidth, this.lineColor);
 		this.cursorX.moveTo(0, 0);
@@ -23,17 +23,5 @@ export default class Cursor extends Container {
 		this.cursorY.x = this.cursorWidth / 2;
 		this.cursorY.y = -this.cursorWidth / 2;
 		this.addChild(this.cursorY);
-	}
-
-	get lineColor(): number {
-		return this._lineColor;
-	}
-
-	set lineColor(value: number) {
-		this.removeChild(this.cursorX, this.cursorY);
-		this.cursorX.destroy(true);
-		this.cursorY.destroy(true);
-		this._lineColor = value;
-		this.draw();
 	}
 }
