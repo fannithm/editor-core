@@ -49,7 +49,7 @@ export class EventHandler {
 		});
 
 		this.editor.event.on(EventType.CursorMove, () => {
-			this.editor.renderer.parseAndRender();
+			this.editor.cursorManager.updateObject();
 		});
 	}
 
