@@ -1,7 +1,6 @@
 import { INoteFlick, INoteSlide, INoteSlideEndFlick, NoteType } from '@fannithm/const/dist/pjsk';
 import { Editor } from './Editor';
 import bezierEasing from 'bezier-easing';
-import { EditorCursorType } from './CursorManager';
 
 /**
  * parse map to editor render object
@@ -49,25 +48,9 @@ export class Parser {
 	}
 
 	private parseCursor() {
-		const cursor = this.editor.cursorManager;
-		if (cursor.positionX < 0 || cursor.positionX > 11) return;
-		if ([EditorCursorType.Default, EditorCursorType.BPM].includes(cursor.type)) return;
-		const lane = Math.min(12 - cursor.width, Math.max(0, cursor.positionX - Math.floor(cursor.width / 2)));
-		this.renderObjects.notes.push({
-			alpha: 0.8,
-			id: '0x0',
-			name: 'CursorNote',
-			scrollHeight: this.editor.calculator.getHeightByBeat(cursor.positionY, this.editor.timeLineManager.prime),
-			texture: cursor.critical ? 'critical' : {
-				[EditorCursorType.Tap]: 'tap',
-				[EditorCursorType.Flick]: 'flick',
-				[EditorCursorType.Slide]: 'slide'
-			}[cursor.type],
-			x: this.editor.calculator.getLaneX(lane - 0.1),
-			width: this.editor.calculator.getLaneWidth(cursor.width + 0.2)
-		});
+		if (this.editor.cursorManager.object)
+			this.renderObjects.notes.push(this.editor.cursorManager.object);
 	}
-
 
 	private addLanes() {
 		const laneNumber = 12;
