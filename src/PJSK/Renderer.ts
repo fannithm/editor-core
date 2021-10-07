@@ -116,10 +116,10 @@ export class Renderer {
 		this.containers.selection.addChild(selectionBox);
 	}
 
-	private renderSelectionRect(name: string, x: number, y: number, width: number, height: number) {
+	private renderSelectionRect(name: string, x: number, y: number, width: number, height: number, color: number = this.editor.color.selectionRect) {
 		const rect = new PIXI.Graphics();
 		rect.name = name;
-		rect.lineStyle(this.editor.const.lineWidth * 4, this.editor.color.selectionRect);
+		rect.lineStyle(this.editor.const.lineWidth * 4, color);
 		rect.drawRect(x, y, width, height);
 		this.containers.selection.addChild(rect);
 	}
@@ -206,12 +206,18 @@ export class Renderer {
 			note.width = object.width / scale;
 			note.alpha = object.alpha;
 			// note.on('click', slide === undefined ? this.singleClickHandler.bind(this) : this.slideClickHandler.bind(this));
+			// overlapped note
+			if (notes.some(v => v.id !== object.id && v.id !== 'CursorNote' && object.id !== 'CursorNote' &&
+				v.rawLane <= object.rawLane && v.rawWidth >= object.rawWidth && v.rawLane + v.rawWidth >= object.rawLane + object.rawWidth &&
+				v.scrollHeight === object.scrollHeight)) {
+				this.renderSelectionRect(`WarningRect-${ object.id }`, note.x, note.y, object.width, this.editor.const.noteHeight, this.editor.color.warningRect);
+			}
 			// selection
-			if (this.editor.selectionManager.selection.single.includes(note.id) ||
-				this.editor.selectionManager.tempSelection.single.includes(note.id) ||
+			if (object.id !== 'CursorNote' && (this.editor.selectionManager.selection.single.includes(object.id) ||
+				this.editor.selectionManager.tempSelection.single.includes(object.id) ||
 				this.editor.selectionManager.selection.slide[object.slideId]?.includes(object.id) ||
-				this.editor.selectionManager.tempSelection.slide[object.slideId]?.includes(object.id)) {
-				this.renderSelectionRect(`SelectionRect-${ note.id }`, note.x, note.y, object.width, this.editor.const.noteHeight);
+				this.editor.selectionManager.tempSelection.slide[object.slideId]?.includes(object.id))) {
+				this.renderSelectionRect(`SelectionRect-${ object.id }`, note.x, note.y, object.width, this.editor.const.noteHeight);
 			}
 			this.containers.note.addChild(note);
 		}
@@ -228,6 +234,7 @@ export class Renderer {
 			arrow.name = object.name;
 			const scale = object.width / arrow.width;
 			const arrowHeight = arrow.height * scale;
+			arrow.alpha = object.alpha;
 			arrow.scale.set(scale);
 			arrow.x = object.x;
 			arrow.y = this.editor.calculator.getYInCanvas(object.scrollHeight) - arrowHeight;
@@ -242,6 +249,7 @@ export class Renderer {
 		);
 		for (let i = 0; i < curves.length; i++) {
 			const object = curves[i];
+			if (object.points.length < 2) continue;
 			const curve = new PIXI.Graphics();
 			curve.name = object.name;
 			curve.beginFill(object.color, object.alpha);

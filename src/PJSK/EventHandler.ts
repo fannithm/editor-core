@@ -1,9 +1,17 @@
 import * as PIXI from 'pixi.js';
+import { v4 as uuid } from 'uuid';
 import { EventType } from './EventEmitter';
 import { Editor } from './Editor';
 import { ScrollController } from './ScrollController';
 import { SelectionManager } from './SelectionManager';
 import { EditorCursorType } from './CursorManager';
+import {
+	CurveType, INoteSlide,
+	INoteSlideEndDefault,
+	INoteSlideEndFlick,
+	MapBeat,
+	NoteType
+} from '@fannithm/const/dist/pjsk';
 
 export class EventHandler {
 	private readonly windowMouseUpHandler: () => void;
@@ -133,7 +141,98 @@ export class EventHandler {
 	}
 
 	private stageClickHandler() {
-		if (this.cursorMoved) return;
+		if (this.cursorMoved || !this.editor.cursorManager.visible) return;
+		if (this.editor.cursorManager.type === EditorCursorType.Default) {
+			// TODO select note
+		} else {
+			// place note
+			const note = {
+				id: uuid(),
+				beat: [this.editor.cursorManager.positionY.integer, this.editor.cursorManager.positionY.numerator, this.editor.cursorManager.positionY.denominator] as MapBeat,
+				lane: this.editor.cursorManager.lane,
+				timeline: this.editor.timeLineManager.prime,
+				width: this.editor.cursorManager.width
+			};
+			switch (this.editor.cursorManager.type) {
+				case EditorCursorType.Tap:
+					this.editor.map.notes.push({
+						...note,
+						type: NoteType.Tap,
+						critical: this.editor.cursorManager.critical
+					});
+					break;
+				case EditorCursorType.Flick:
+					this.editor.map.notes.push({
+						...note,
+						type: NoteType.Flick,
+						direction: this.editor.cursorManager.direction,
+						critical: this.editor.cursorManager.critical
+					});
+					break;
+				case EditorCursorType.Slide:
+					if (!this.editor.cursorManager.slideHeadPlaced) {
+						this.editor.cursorManager.placeSlideHead();
+					} else {
+						let start = this.editor.cursorManager.slideHeadObject;
+						let end = this.editor.cursorManager.noteObject;
+						let startBeat = this.editor.cursorManager.slideHeadBeat;
+						let endBeat = [this.editor.cursorManager.positionY.integer, this.editor.cursorManager.positionY.numerator, this.editor.cursorManager.positionY.denominator] as MapBeat;
+						if (start.scrollHeight === end.scrollHeight) return;
+						if (start.scrollHeight > end.scrollHeight) {
+							[start, end] = [end, start];
+							[startBeat, endBeat] = [endBeat, startBeat];
+						}
+						const endNote = {
+							id: uuid(),
+							type: this.editor.cursorManager.flickEnd ? NoteType.SlideEndFlick : NoteType.SlideEndDefault,
+							beat: endBeat,
+							lane: end.rawLane,
+							width: end.rawWidth,
+							curve: CurveType.None
+						} as INoteSlideEndDefault | INoteSlideEndFlick;
+						if (this.editor.cursorManager.flickEnd) {
+							(endNote as INoteSlideEndFlick).direction = this.editor.cursorManager.direction;
+							if (this.editor.cursorManager.critical)
+								(endNote as INoteSlideEndFlick).critical = true;
+						}
+						const slide = {
+							id: note.id,
+							timeline: this.editor.timeLineManager.prime,
+							notes: [
+								{
+									id: uuid(),
+									type: NoteType.SlideStart,
+									beat: startBeat,
+									lane: start.rawLane,
+									width: start.rawWidth,
+									curve: this.editor.cursorManager.curve
+								},
+								endNote
+							]
+						} as INoteSlide;
+						if (this.editor.cursorManager.slideCritical) slide.critical = true;
+						this.editor.map.slides.push(slide);
+						this.editor.cursorManager.endSlidePlacement();
+					}
+					break;
+				case EditorCursorType.BPM: {
+					const index = this.editor.map.bpms.findIndex(v => v.timeline === note.timeline && this.editor.fraction(v.beat).eq(this.editor.fraction(note.beat)));
+					const bpm = {
+						id: note.id,
+						timeline: note.timeline,
+						beat: note.beat,
+						bpm: this.editor.cursorManager.bpm
+					};
+					if (index !== -1)
+						this.editor.map.bpms[index] = bpm;
+					else
+						this.editor.map.bpms.push(bpm);
+					this.editor.sortMap();
+					break;
+				}
+			}
+		}
+		this.editor.renderer.parseAndRender();
 	}
 
 	private scrollTickerHandler(): void {

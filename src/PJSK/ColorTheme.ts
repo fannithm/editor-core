@@ -24,5 +24,6 @@ export const ColorTheme = {
 	selectionBox: 0x0390fc,
 	selectionBoxAlpha: 0.2,
 	selectionRect: 0x0390fc,
+	warningRect: 0xff8800,
 	cursor: 0x000000
 };
