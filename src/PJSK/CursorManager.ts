@@ -1,7 +1,7 @@
 import { Editor } from './Editor';
 import { Fraction } from '@fannithm/utils';
 import { CurveType, FlickDirection, MapBeat } from '@fannithm/const/dist/pjsk';
-import { IRenderArrowObject, IRenderBeatLineObject, IRenderCurveObject, IRenderNoteObject } from './Parser';
+import { IRenderArrowObject, IRenderCurveObject, IRenderNoteObject } from './Parser';
 
 export class CursorManager {
 	private _critical = false;

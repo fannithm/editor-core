@@ -1,0 +1,24 @@
+{
+	"timelines": [
+		{
+			"id": "d201ad4b-c3de-4486-879a-f77570f8cb71",
+			"name": "Timeline 1"
+		}
+	],
+	"bpms": [
+		{
+			"id": "b7b82405-b414-4cbb-bddd-f96264c1c5b6",
+			"timeline": "d201ad4b-c3de-4486-879a-f77570f8cb71",
+			"beat": [
+				0,
+				0,
+				1
+			],
+			"bpm": 120
+		}
+	],
+	"notes": [
+	],
+	"slides": [
+	]
+}
