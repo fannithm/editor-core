@@ -130,7 +130,7 @@ export class CursorManager {
 		// slide
 		if (this.type === EditorCursorType.Slide) {
 			// end note
-			this.noteObject.texture = this.slideCritical || (this.critical && this.flickEnd) ? 'critical' : (this.slideHeadPlaced && this.flickEnd ? 'flick' : 'slide');
+			this.noteObject.texture = this.slideCritical || (!this.slideHeadPlaced && this.critical) || (this.slideHeadPlaced && this.critical && this.flickEnd) ? 'critical' : (this.slideHeadPlaced && this.flickEnd ? 'flick' : 'slide');
 			if (this.slideHeadPlaced) {
 				// draw curve
 				const start = this.slideHeadObject.scrollHeight > this.noteObject.scrollHeight ? this.noteObject : this.slideHeadObject;
