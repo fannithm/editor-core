@@ -7,7 +7,7 @@ import bezierEasing from 'bezier-easing';
  */
 export class Parser {
 	public renderObjects: IRenderObjects;
-	private bezier = [
+	public bezier = [
 		false,
 		[0, 0, 1, 1],
 		[0.11, 0, 0.5, 0],
@@ -33,6 +33,7 @@ export class Parser {
 	}
 
 	parse(): void {
+		if (this.map?.bpms.length === 0) return;
 		this.initRenderObjects();
 		this.addLanes();
 		if (this.map?.timelines.length > 0 && this.map?.bpms.length > 0) {
@@ -48,8 +49,10 @@ export class Parser {
 	}
 
 	private parseCursor() {
-		if (this.editor.cursorManager.object)
-			this.renderObjects.notes.push(this.editor.cursorManager.object);
+		this.renderObjects.notes.push(this.editor.cursorManager.noteObject);
+		this.renderObjects.notes.push(this.editor.cursorManager.slideHeadObject);
+		this.renderObjects.arrows.push(this.editor.cursorManager.arrowObject);
+		this.renderObjects.curves.push(this.editor.cursorManager.curveObject);
 	}
 
 	private addLanes() {
@@ -187,6 +190,7 @@ export class Parser {
 				1: '_left',
 				2: '_right'
 			}[note.direction] }`,
+			alpha: 1,
 			id: note.id
 		});
 	}
@@ -206,7 +210,9 @@ export class Parser {
 				scrollHeight: height,
 				texture: note.critical ? 'critical' : (note.type ? 'flick' : 'tap'),
 				id: note.id,
-				alpha: 1
+				alpha: 1,
+				rawLane: note.lane,
+				rawWidth: note.width
 			});
 		}
 	}
@@ -243,6 +249,7 @@ export class Parser {
 		const slides = this.map.slides.filter(v => this.editor.timeLineManager.visible.includes(v.timeline));
 		for (let i = 0; i < slides.length; i++) {
 			const slide = slides[i];
+			// TODO sort notes before parse
 			for (let j = 0; j < slide.notes.length; j++) {
 				const note = slide.notes[j];
 				const height = this.editor.calculator.getHeightByBeat(this.editor.fraction(note.beat), slide.timeline);
@@ -256,7 +263,9 @@ export class Parser {
 						texture: slide.critical ? 'critical' : 'slide',
 						id: note.id,
 						slideId: slide.id,
-						alpha: 1
+						alpha: 1,
+						rawLane: note.lane,
+						rawWidth: note.width
 					});
 				} else if (note.type === NoteType.SlideEndFlick) {
 					this.renderObjects.notes.push({
@@ -267,7 +276,9 @@ export class Parser {
 						texture: (note.critical || slide.critical) ? 'critical' : 'flick',
 						id: note.id,
 						slideId: slide.id,
-						alpha: 1
+						alpha: 1,
+						rawLane: note.lane,
+						rawWidth: note.width
 					});
 					this.pushFlickObject(note, height, slide.critical);
 				} else if (note.type === NoteType.SlideInvisible) {
@@ -329,7 +340,7 @@ export class Parser {
 		}
 	}
 
-	private getCurvePoints(startX: number, startScrollHeight: number, endX: number, endScrollHeight: number, bezier: number[] | false): IRenderCurvePoint[] {
+	public getCurvePoints(startX: number, startScrollHeight: number, endX: number, endScrollHeight: number, bezier: number[] | false): IRenderCurvePoint[] {
 		if (!bezier) return [
 			{ x: startX, scrollHeight: startScrollHeight },
 			{ x: startX, scrollHeight: endScrollHeight }
@@ -404,6 +415,8 @@ export interface IRenderNoteObject {
 	alpha: number;
 	id: string;
 	slideId?: string;
+	rawLane: number;
+	rawWidth: number;
 }
 
 export interface IRenderCurvePoint {
@@ -433,6 +446,7 @@ export interface IRenderArrowObject {
 	width: number;
 	scrollHeight: number;
 	texture: string;
+	alpha: number;
 	id: string;
 }
 

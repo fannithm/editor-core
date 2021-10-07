@@ -1,7 +1,7 @@
 import convertor from '@fannithm/sus-fannithm-convertor';
 import './style.css';
 import { Editor, EditorCursorType, EventType, IScrollEvent } from '../PJSK';
-import { IMap } from '@fannithm/const/dist/pjsk';
+import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 
 (function () {
 	function $(s: string) {
@@ -108,7 +108,6 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 		$('#note-bpm').addEventListener('click', changeNoteType(EditorCursorType.BPM));
 
 		document.addEventListener('keydown', event => {
-			console.log(event.key);
 			switch (event.key) {
 				case '1':
 					editor.cursorManager.type = EditorCursorType.Default;
@@ -122,6 +121,13 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 				case '4':
 					editor.cursorManager.type = EditorCursorType.Slide;
 					break;
+				case 'b': {
+					const bpm = parseInt(prompt('Please enter the BPM value:', '120'));
+					if (isNaN(bpm)) return;
+					editor.cursorManager.bpm = bpm;
+					editor.cursorManager.type = EditorCursorType.BPM;
+					break;
+				}
 				case 'q':
 					editor.cursorManager.width--;
 					break;
@@ -131,12 +137,41 @@ import { IMap } from '@fannithm/const/dist/pjsk';
 				case 'c':
 					editor.cursorManager.critical = !editor.cursorManager.critical;
 					break;
+				case 'r':
+					if (editor.cursorManager.type === EditorCursorType.Flick ||
+						(editor.cursorManager.type === EditorCursorType.Slide && editor.cursorManager.slideHeadPlaced && editor.cursorManager.flickEnd)) {
+						editor.cursorManager.direction = {
+							[FlickDirection.Up]: FlickDirection.Right,
+							[FlickDirection.Right]: FlickDirection.Left,
+							[FlickDirection.Left]: FlickDirection.Up
+						}[editor.cursorManager.direction];
+					}
+					break;
+				case 'v':
+					if (editor.cursorManager.type === EditorCursorType.Slide && editor.cursorManager.slideHeadPlaced) {
+						editor.cursorManager.curve = {
+							[CurveType.Linear]: CurveType.EaseIn,
+							[CurveType.EaseIn]: CurveType.EaseOut,
+							[CurveType.EaseOut]: CurveType.Linear
+						}[editor.cursorManager.curve];
+					}
+					break;
+				case 'f':
+					if (editor.cursorManager.type === EditorCursorType.Slide && editor.cursorManager.slideHeadPlaced) {
+						editor.cursorManager.flickEnd = !editor.cursorManager.flickEnd;
+					}
+					break;
+				case 'Escape':
+					if (editor.cursorManager.type === EditorCursorType.Slide && editor.cursorManager.slideHeadPlaced) {
+						editor.cursorManager.endSlidePlacement();
+					}
+					break;
 				case 'Delete':
 					break;
 			}
 		});
 
-		const res = await fetch('map/lzn.json');
+		const res = await fetch('map/test.json');
 		const map = await res.json();
 		setMap(map);
 	}
