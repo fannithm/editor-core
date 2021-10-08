@@ -22,7 +22,6 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 
 		const setMap = (map: IMap) => {
 			editor.map = map;
-			editor.beatSlice = 1;
 			editor.audioManager.totalTime = 180;
 			editor.scrollController.scrollTo(0);
 		};
@@ -105,7 +104,17 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 		$('#note-tap').addEventListener('click', changeNoteType(EditorCursorType.Tap));
 		$('#note-flick').addEventListener('click', changeNoteType(EditorCursorType.Flick));
 		$('#note-slide').addEventListener('click', changeNoteType(EditorCursorType.Slide));
-		$('#note-bpm').addEventListener('click', changeNoteType(EditorCursorType.BPM));
+		$('#note-bpm').addEventListener('click', changeBPM);
+
+		function changeBPM() {
+			const bpm = parseInt(prompt('Please enter the BPM value:', '120'));
+			if (isNaN(bpm) || bpm <= 0) {
+				alert('Invalid BPM value!');
+				return;
+			}
+			editor.cursorManager.bpm = bpm;
+			editor.cursorManager.type = EditorCursorType.BPM;
+		}
 
 		document.addEventListener('keydown', event => {
 			switch (event.key) {
@@ -121,13 +130,9 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 				case '4':
 					editor.cursorManager.type = EditorCursorType.Slide;
 					break;
-				case 'b': {
-					const bpm = parseInt(prompt('Please enter the BPM value:', '120'));
-					if (isNaN(bpm)) return;
-					editor.cursorManager.bpm = bpm;
-					editor.cursorManager.type = EditorCursorType.BPM;
+				case 'b':
+					changeBPM();
 					break;
-				}
 				case 'q':
 					editor.cursorManager.width--;
 					break;

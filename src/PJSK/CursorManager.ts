@@ -191,10 +191,9 @@ export class CursorManager {
 
 	set type(value: EditorCursorType) {
 		this._type = value;
-		if (this.type === EditorCursorType.Default && value !== this._type) {
+		if (this.type === EditorCursorType.Default && value !== this._type)
 			this.editor.selectionManager.emptySelection();
-		}
-		this.endSlidePlacement();
+		if (this.slideHeadPlaced) this.endSlidePlacement();
 		this.editor.renderer.cursor.lineColor = this.type === EditorCursorType.BPM ? this.editor.color.bpmLine : this.editor.color.cursor;
 		this.updateObject();
 	}
