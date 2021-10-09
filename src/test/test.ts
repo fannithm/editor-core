@@ -94,6 +94,27 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			console.log(editor.selectionManager.getNotesBySelection(editor.selectionManager.selection));
 		});
 
+		const file = document.createElement('input');
+		file.type = 'file';
+		file.accept = '.json';
+		$('#import').addEventListener('click', () => {
+			file.click();
+		});
+		file.addEventListener('change', async () => {
+			setMap(JSON.parse(await file.files[0].text()));
+		});
+
+		$('#export').addEventListener('click', () => {
+			const map = JSON.stringify(editor.map);
+			const file = new Blob([map], { type: 'application/json' });
+			const url = URL.createObjectURL(file);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'map.json';
+			a.click();
+			URL.revokeObjectURL(url);
+		});
+
 		const changeNoteType = (type: EditorCursorType) => {
 			return () => {
 				editor.cursorManager.type = type;
@@ -107,7 +128,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 		$('#note-bpm').addEventListener('click', changeBPM);
 
 		function changeBPM() {
-			const bpm = parseInt(prompt('Please enter the BPM value:', '120'));
+			const bpm = parseFloat(prompt('Please enter the BPM value:', '120'));
 			if (isNaN(bpm) || bpm <= 0) {
 				alert('Invalid BPM value!');
 				return;
