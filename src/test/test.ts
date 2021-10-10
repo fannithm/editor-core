@@ -91,7 +91,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 		});
 
 		$('#delete').addEventListener('click', () => {
-			console.log(editor.selectionManager.getNotesBySelection(editor.selectionManager.selection));
+			editor.selectionManager.deleteNotesBySelection(editor.selectionManager.selection);
 		});
 
 		const file = document.createElement('input');
@@ -198,6 +198,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 					}
 					break;
 				case 'Delete':
+					editor.selectionManager.deleteNotesBySelection(editor.selectionManager.selection);
 					break;
 			}
 		});

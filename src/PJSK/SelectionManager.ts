@@ -1,6 +1,8 @@
 import { PJSK, UUID } from '@fannithm/const';
 import { Editor } from './Editor';
 import { IRenderInvisibleNodeObject, IRenderNoteObject, IRenderVisibleNodeObject } from './Parser';
+import { INoteSlideEndDefault, INoteSlideEndFlick, INoteSlideStart, NoteType } from '@fannithm/const/dist/pjsk';
+import SlideNote from './notes/SlideNote';
 
 export class SelectionManager {
 	public selection: IEditorSelection;
@@ -117,6 +119,61 @@ export class SelectionManager {
 				};
 			})
 		};
+	}
+
+	public deleteNotesBySelection(selection: IEditorSelection): void {
+		for (let i = 0; i < selection.single.length; i++) {
+			const id = selection.single[i];
+			const index = this.editor.map.notes.findIndex(v => v.id === id);
+			if (index !== -1) this.editor.map.notes.splice(index, 1);
+		}
+		for (const slideId in selection.slide) {
+			const slideSelection = selection.slide[slideId];
+			const slideIndex = this.editor.map.slides.findIndex(v => v.id === slideId);
+			const slide = this.editor.map.slides[slideIndex];
+			let start: INoteSlideStart = null;
+			let end: INoteSlideEndDefault | INoteSlideEndFlick = null;
+			for (let i = 0; i < slideSelection.length; i++) {
+				const id = slideSelection[i];
+				const index = slide.notes.findIndex(v => v.id === id);
+				const [note] = slide.notes.splice(index, 1);
+				if (note.type === NoteType.SlideStart) {
+					start = note;
+				} else if (note.type === NoteType.SlideEndDefault || note.type === NoteType.SlideEndFlick) {
+					end = note;
+				}
+			}
+			if (slide.notes.length <= 1) {
+				this.editor.map.slides.splice(slideIndex, 1);
+				continue;
+			}
+			if (start) {
+				const slideHead = slide.notes[0];
+				slideHead.type = NoteType.SlideStart;
+				if (slideHead.lane === undefined) {
+					const object = this.editor.parser.renderObjects.visibleNodes.find(v => v.id === slideHead.id);
+					const laneWidth = this.editor.calculator.getLaneWidth(1);
+					slideHead.lane = Math.round((object.x - this.editor.calculator.getLaneX(0)) / laneWidth);
+					slideHead.width = Math.round(object.width / laneWidth);
+					slideHead.curve = start.curve;
+				}
+			}
+			if (end) {
+				const slideTail = slide.notes[slide.notes.length - 1];
+				slideTail.type = end.type;
+				if (end.type === NoteType.SlideEndFlick) {
+					(slideTail as INoteSlideEndFlick).direction = end.direction;
+					if (end.critical) (slideTail as INoteSlideEndFlick).critical = end.critical;
+				}
+				if (slideTail.lane === undefined) {
+					const object = this.editor.parser.renderObjects.visibleNodes.find(v => v.id === slideTail.id);
+					const laneWidth = this.editor.calculator.getLaneWidth(1);
+					slideTail.width = Math.round(object.width / laneWidth);
+					slideTail.lane = Math.round((object.x - this.editor.calculator.getLaneX(0)) / laneWidth);
+				}
+			}
+		}
+		this.editor.renderer.parseAndRender();
 	}
 }
 
