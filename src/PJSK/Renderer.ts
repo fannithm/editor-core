@@ -213,7 +213,7 @@ export class Renderer {
 				this.renderSelectionRect(`WarningRect-${ object.id }`, note.x, note.y, object.width, this.editor.const.noteHeight, this.editor.color.warningRect);
 			}
 			// selection
-			if (object.id !== 'CursorNote' && (this.editor.selectionManager.selection.single.includes(object.id) ||
+			if ((this.editor.selectionManager.selection.single.includes(object.id) ||
 				this.editor.selectionManager.tempSelection.single.includes(object.id) ||
 				this.editor.selectionManager.selection.slide[object.slideId]?.includes(object.id) ||
 				this.editor.selectionManager.tempSelection.slide[object.slideId]?.includes(object.id))) {
@@ -270,6 +270,7 @@ export class Renderer {
 		for (let i = 0; i < nodes.length; i++) {
 			const object = nodes[i];
 			const sprite = new SlideVisibleNote(this.textures[object.texture], object.id, object.slideId);
+			sprite.alpha = object.alpha;
 			sprite.name = object.name;
 			const scale = this.editor.const.noteHeight / sprite.height;
 			sprite.scale.set(scale);
@@ -296,6 +297,7 @@ export class Renderer {
 			const line = new PIXI.Graphics();
 			line.name = object.name;
 			line.lineStyle(this.editor.const.invisibleLineWidth, object.color, 1);
+			line.alpha = object.alpha;
 			line.moveTo(object.x, 0);
 			line.lineTo(object.x + object.width, 0);
 			line.y = this.editor.calculator.getYInCanvas(object.scrollHeight);

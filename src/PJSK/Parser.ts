@@ -51,8 +51,11 @@ export class Parser {
 	private parseCursor() {
 		this.renderObjects.notes.push(this.editor.cursorManager.noteObject);
 		this.renderObjects.notes.push(this.editor.cursorManager.slideHeadObject);
+		this.renderObjects.notes.push(this.editor.cursorManager.slideTailObject);
 		this.renderObjects.arrows.push(this.editor.cursorManager.arrowObject);
 		this.renderObjects.curves.push(this.editor.cursorManager.curveObject);
+		this.renderObjects.visibleNodes.push(this.editor.cursorManager.visibleObject);
+		this.renderObjects.invisibleNodes.push(this.editor.cursorManager.invisibleObject);
 	}
 
 	private addLanes() {
@@ -239,6 +242,7 @@ export class Parser {
 				width: this.editor.calculator.getLaneWidth(width),
 				scrollHeight: height,
 				texture: `slide_node${ slide.critical ? '_critical' : '' }`,
+				alpha: 1,
 				id: note.id,
 				slideId: slide.id
 			});
@@ -288,6 +292,7 @@ export class Parser {
 						width: this.editor.calculator.getLaneWidth(note.width - 0.2),
 						scrollHeight: height,
 						color: slide.critical ? this.editor.color.slideCriticalInvisibleNode : this.editor.color.slideInvisibleNode,
+						alpha: 1,
 						id: note.id,
 						slideId: slide.id
 					});
@@ -298,6 +303,7 @@ export class Parser {
 						width: this.editor.calculator.getLaneWidth(note.width),
 						scrollHeight: height,
 						texture: `slide_node${ slide.critical ? '_critical' : '' }`,
+						alpha: 1,
 						id: note.id,
 						slideId: slide.id
 					});
@@ -456,6 +462,7 @@ export interface IRenderVisibleNodeObject {
 	width: number;
 	scrollHeight: number;
 	texture: string;
+	alpha: number;
 	id: string;
 	slideId: string;
 }
@@ -466,6 +473,7 @@ export interface IRenderInvisibleNodeObject {
 	width: number;
 	scrollHeight: number;
 	color: number;
+	alpha: number;
 	id: string;
 	slideId: string;
 }

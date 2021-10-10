@@ -94,11 +94,6 @@ export class Editor {
 		});
 	}
 
-	sortMap(): void {
-		if (!this.map) return;
-		this.map.bpms.sort((a, b) => this.fraction(a.beat).minus(this.fraction(b.beat)).decimal);
-	}
-
 	set map(map: IMap) {
 		this._map = map;
 		if (!this.timeLineManager.visible.some(v => this.map.timelines.map(t => t.id).includes(v))) {

@@ -173,8 +173,13 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 						}[editor.cursorManager.direction];
 					}
 					break;
+				case 'x':
+					if (editor.cursorManager.type === EditorCursorType.SlideNode) {
+						editor.cursorManager.nodeVisible = !editor.cursorManager.nodeVisible;
+					}
+					break;
 				case 'v':
-					if (editor.cursorManager.type === EditorCursorType.Slide && editor.cursorManager.slideHeadPlaced) {
+					if ((editor.cursorManager.type === EditorCursorType.Slide && editor.cursorManager.slideHeadPlaced) || editor.cursorManager.type === EditorCursorType.SlideNode) {
 						editor.cursorManager.curve = {
 							[CurveType.Linear]: CurveType.EaseIn,
 							[CurveType.EaseIn]: CurveType.EaseOut,

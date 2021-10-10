@@ -79,6 +79,7 @@ export class SelectionManager {
 		const find = (arr: (IRenderNoteObject | IRenderVisibleNodeObject | IRenderInvisibleNodeObject)[]) => {
 			for (let i = 0; i < arr.length; i++) {
 				const note = arr[i];
+				if (note.id === 'CursorNote') continue;
 				if (note.scrollHeight >= startY && note.scrollHeight <= endY &&
 					note.x >= startX && (note.x + note.width) <= endX) {
 					if (note.slideId !== undefined && !this.selection.slide[note.slideId]?.includes(note.id)) {
