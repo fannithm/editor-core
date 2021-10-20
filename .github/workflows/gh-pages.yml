@@ -25,7 +25,7 @@ jobs:
           npm config set '//npm.pkg.github.com/:_authToken' "${{ secrets.GITHUB_TOKEN }}"
           yarn install
           yarn build:preview
-          cp ./public/* ./dist/
+          cp -r ./public/* ./dist/
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
