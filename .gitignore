@@ -234,4 +234,4 @@ modules.xml
 
 build/
 public/
-!public/map/test.json
+!public/pjsk/test/map/test.json

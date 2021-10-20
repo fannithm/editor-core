@@ -151,7 +151,7 @@ export class CursorManager {
 			return;
 		}
 
-		this.editor.renderer.cursor.lineColor = this.editor.color.cursor;
+		this.editor.renderer.cursor.lineColor = this.editor.resourceManager.theme.color.cursor;
 		const scrollHeight = this.editor.calculator.getHeightByBeat(this.positionY, this.editor.timeLineManager.prime);
 		const x = this.editor.calculator.getLaneX(this.lane - 0.1);
 		const width = this.editor.calculator.getLaneWidth(this.width + 0.2);
@@ -203,8 +203,8 @@ export class CursorManager {
 			// curve
 			this.curveObject.startScrollHeight = head.scrollHeight;
 			this.curveObject.endScrollHeight = tail.scrollHeight;
-			this.curveObject.alpha = 0.8 * (this.slideCritical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha);
-			this.curveObject.color = this.slideCritical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve;
+			this.curveObject.alpha = 0.8 * (this.slideCritical ? this.editor.resourceManager.theme.color.slideCriticalCurveAlpha : this.editor.resourceManager.theme.color.slideCurveAlpha);
+			this.curveObject.color = this.slideCritical ? this.editor.resourceManager.theme.color.slideCriticalCurve : this.editor.resourceManager.theme.color.slideCurve;
 			this.curveObject.points = [
 				...this.editor.parser.getCurvePoints(
 					this.editor.calculator.getLaneX(head.rawLane + 0.1),
@@ -228,7 +228,7 @@ export class CursorManager {
 			this.invisibleObject.width = this.editor.calculator.getLaneWidth(this.width - 0.2);
 			this.invisibleObject.scrollHeight = scrollHeight;
 			this.invisibleObject.alpha = 0.6;
-			this.invisibleObject.color = critical ? this.editor.color.slideCriticalInvisibleNode : this.editor.color.slideInvisibleNode;
+			this.invisibleObject.color = critical ? this.editor.resourceManager.theme.color.slideCriticalInvisibleNode : this.editor.resourceManager.theme.color.slideInvisibleNode;
 			if (this.nodeVisible) {
 				this.visibleObject.x = x;
 				this.visibleObject.width = width;
@@ -237,7 +237,7 @@ export class CursorManager {
 				this.visibleObject.texture = `slide_node${ critical ? '_critical' : '' }`;
 			}
 		} else if (this.type === EditorCursorType.BPM) {
-			this.editor.renderer.cursor.lineColor = this.editor.color.bpmLine;
+			this.editor.renderer.cursor.lineColor = this.editor.resourceManager.theme.color.bpmLine;
 		}
 		this.editor.renderer.render();
 	}

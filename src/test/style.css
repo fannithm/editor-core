@@ -18,5 +18,11 @@ body {
 
 #app {
 	height: calc(100% - 105px);
-	 max-width: 600px;
+	max-width: 600px;
+}
+
+#progress {
+	max-width: 600px;
+	text-align: center;
+	margin-top: 16px;
 }

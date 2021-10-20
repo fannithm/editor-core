@@ -8,7 +8,6 @@ import Cursor from './notes/Cursor';
 import { Fraction } from '@fannithm/utils';
 
 export class Renderer {
-	private readonly textures: Record<string, PIXI.Texture>;
 	private containers: {
 		lane: PIXI.Container;
 		time: PIXI.Container;
@@ -23,7 +22,6 @@ export class Renderer {
 	public readonly cursor: Cursor;
 
 	constructor(private editor: Editor) {
-		this.textures = PIXI.Loader.shared.resources['images/sprite.json'].textures;
 		const { width, height } = this.editor.const;
 		this.app = new PIXI.Application({
 			backgroundAlpha: 0,
@@ -38,7 +36,7 @@ export class Renderer {
 		this.app.stage.sortableChildren = true;
 		this.app.stage.interactive = true;
 		// cursor
-		this.cursor = new Cursor(this.editor.const.cursorLineWidth, this.editor.calculator.getLaneWidth(1.2), this.editor.color.cursor, this.textures);
+		this.cursor = new Cursor(this.editor.const.cursorLineWidth, this.editor.calculator.getLaneWidth(1.2), this.editor.resourceManager.theme.color.cursor, this.editor.resourceManager.textures);
 		this.cursor.visible = false;
 		this.cursor.zIndex = 15;
 		this.app.stage.addChild(this.cursor);
@@ -96,7 +94,7 @@ export class Renderer {
 		this.background.name = 'Background';
 		this.background.zIndex = -1;
 		this.background.interactive = true;
-		this.background.beginFill(this.editor.color.background, 1);
+		this.background.beginFill(this.editor.resourceManager.theme.color.background, 1);
 		this.background.drawRect(0, 0, this.editor.const.width, this.editor.const.height);
 		this.background.endFill();
 		this.app.stage.addChild(this.background);
@@ -106,8 +104,8 @@ export class Renderer {
 		const box = this.editor.selectionManager.selectionBox;
 		if (box[0] === box[2] || box[1] === box[3]) return;
 		const selectionBox = new PIXI.Graphics();
-		selectionBox.beginFill(this.editor.color.selectionBox, this.editor.color.selectionBoxAlpha);
-		selectionBox.lineStyle(this.editor.const.lineWidth, this.editor.color.selectionBox);
+		selectionBox.beginFill(this.editor.resourceManager.theme.color.selectionBox, this.editor.resourceManager.theme.color.selectionBoxAlpha);
+		selectionBox.lineStyle(this.editor.const.lineWidth, this.editor.resourceManager.theme.color.selectionBox);
 		// TODO max width and max height out of box
 		const y = this.editor.calculator.getYInCanvas(box[1]);
 		const height = this.editor.calculator.getYInCanvas(box[3]) - y;
@@ -116,7 +114,7 @@ export class Renderer {
 		this.containers.selection.addChild(selectionBox);
 	}
 
-	private renderSelectionRect(name: string, x: number, y: number, width: number, height: number, color: number = this.editor.color.selectionRect) {
+	private renderSelectionRect(name: string, x: number, y: number, width: number, height: number, color: number = this.editor.resourceManager.theme.color.selectionRect) {
 		const rect = new PIXI.Graphics();
 		rect.name = name;
 		rect.lineStyle(this.editor.const.lineWidth * 4, color);
@@ -157,7 +155,7 @@ export class Renderer {
 	private renderCurrentTimeLine(): void {
 		this.currentTimeLine = new PIXI.Graphics();
 		this.currentTimeLine.name = 'CurrentTime-line';
-		this.currentTimeLine.lineStyle(this.editor.const.lineWidth, this.editor.color.currentTimeLine, 1);
+		this.currentTimeLine.lineStyle(this.editor.const.lineWidth, this.editor.resourceManager.theme.color.currentTimeLine, 1);
 		this.currentTimeLine.moveTo(0, 0);
 		this.currentTimeLine.lineTo(this.editor.const.width * 0.8, 0);
 		this.currentTimeLine.x = this.editor.const.width * 0.1;
@@ -196,8 +194,8 @@ export class Renderer {
 		for (let i = 0; i < notes.length; i++) {
 			const object = notes[i];
 			const note = object.slideId === undefined
-				? new SingleNote(this.textures[object.texture], object.id)
-				: new SlideNote(this.textures[object.texture], object.id, object.slideId);
+				? new SingleNote(this.editor.resourceManager.textures[object.texture], object.id)
+				: new SlideNote(this.editor.resourceManager.textures[object.texture], object.id, object.slideId);
 			note.name = object.name;
 			const scale = this.editor.const.noteHeight / note.height;
 			note.scale.set(scale);
@@ -210,7 +208,7 @@ export class Renderer {
 			if (notes.some(v => v.id !== object.id && v.id !== 'CursorNote' && object.id !== 'CursorNote' &&
 				v.rawLane <= object.rawLane && v.rawWidth >= object.rawWidth && v.rawLane + v.rawWidth >= object.rawLane + object.rawWidth &&
 				v.scrollHeight === object.scrollHeight)) {
-				this.renderSelectionRect(`WarningRect-${ object.id }`, note.x, note.y, object.width, this.editor.const.noteHeight, this.editor.color.warningRect);
+				this.renderSelectionRect(`WarningRect-${ object.id }`, note.x, note.y, object.width, this.editor.const.noteHeight, this.editor.resourceManager.theme.color.warningRect);
 			}
 			// selection
 			if ((this.editor.selectionManager.selection.single.includes(object.id) ||
@@ -230,7 +228,7 @@ export class Renderer {
 		);
 		for (let i = 0; i < arrows.length; i++) {
 			const object = arrows[i];
-			const arrow = new PIXI.Sprite(this.textures[object.texture]);
+			const arrow = new PIXI.Sprite(this.editor.resourceManager.textures[object.texture]);
 			arrow.name = object.name;
 			const scale = object.width / arrow.width;
 			const arrowHeight = arrow.height * scale;
@@ -269,7 +267,7 @@ export class Renderer {
 		);
 		for (let i = 0; i < nodes.length; i++) {
 			const object = nodes[i];
-			const sprite = new SlideVisibleNote(this.textures[object.texture], object.id, object.slideId);
+			const sprite = new SlideVisibleNote(this.editor.resourceManager.textures[object.texture], object.id, object.slideId);
 			sprite.alpha = object.alpha;
 			sprite.name = object.name;
 			const scale = this.editor.const.noteHeight / sprite.height;

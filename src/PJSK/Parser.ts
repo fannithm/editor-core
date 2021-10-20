@@ -66,8 +66,8 @@ export class Parser {
 			this.renderObjects.lanes.push({
 				name: `Lane-${ i }`,
 				x: this.editor.const.width * ((i * laneWidth + leftSpace) / 100),
-				color: (i % 2) ? this.editor.color.secondaryLane : this.editor.color.primeLane,
-				alpha: (i % 2) ? this.editor.color.secondaryLaneAlpha : this.editor.color.primeLaneAlpha
+				color: (i % 2) ? this.editor.resourceManager.theme.color.secondaryLane : this.editor.resourceManager.theme.color.primeLane,
+				alpha: (i % 2) ? this.editor.resourceManager.theme.color.secondaryLaneAlpha : this.editor.resourceManager.theme.color.primeLaneAlpha
 			});
 		}
 	}
@@ -89,8 +89,8 @@ export class Parser {
 				alpha: 0
 			};
 			if (i % slice === 0) {
-				object.color = this.editor.color.beatLineWhole;
-				object.alpha = this.editor.color.beatLineWholeAlpha;
+				object.color = this.editor.resourceManager.theme.color.beatLineWhole;
+				object.alpha = this.editor.resourceManager.theme.color.beatLineWholeAlpha;
 				object.width = this.editor.const.width - this.editor.calculator.getLaneX(0);
 				this.renderObjects.texts.push({
 					name: `BeatLineText-${ beat.decimal }`,
@@ -99,19 +99,19 @@ export class Parser {
 					scrollHeight: height + this.editor.const.paddingY,
 					alignX: 'right',
 					alignY: 'bottom',
-					color: this.editor.color.beatLineWhole,
-					alpha: this.editor.color.beatLineWholeAlpha,
+					color: this.editor.resourceManager.theme.color.beatLineWhole,
+					alpha: this.editor.resourceManager.theme.color.beatLineWholeAlpha,
 					text: `${ Math.floor((beat.integer) / 4) + 1 }:${ beat.integer % 4 + 1 }`
 				});
 			} else if (i % (slice / 2) === 0) {
-				object.color = this.editor.color.beatLineHalf;
-				object.alpha = this.editor.color.beatLineHalfAlpha;
+				object.color = this.editor.resourceManager.theme.color.beatLineHalf;
+				object.alpha = this.editor.resourceManager.theme.color.beatLineHalfAlpha;
 			} else if (i % (slice / 3) === 0) {
-				object.color = this.editor.color.beatLineThird;
-				object.alpha = this.editor.color.beatLineThirdAlpha;
+				object.color = this.editor.resourceManager.theme.color.beatLineThird;
+				object.alpha = this.editor.resourceManager.theme.color.beatLineThirdAlpha;
 			} else if (i % (slice / 4) === 0) {
-				object.color = this.editor.color.beatLineQuarter;
-				object.alpha = this.editor.color.beatLineQuarterAlpha;
+				object.color = this.editor.resourceManager.theme.color.beatLineQuarter;
+				object.alpha = this.editor.resourceManager.theme.color.beatLineQuarterAlpha;
 			} else continue;
 			this.renderObjects.beatLines.push(object);
 		}
@@ -133,7 +133,7 @@ export class Parser {
 				x: 0,
 				width: this.editor.const.width,
 				scrollHeight: bpmHeight,
-				color: this.editor.color.bpmLine,
+				color: this.editor.resourceManager.theme.color.bpmLine,
 				alpha: 1
 			});
 			// bpm text
@@ -143,7 +143,7 @@ export class Parser {
 				scrollHeight: bpmHeight + this.editor.const.paddingY,
 				alignY: 'bottom',
 				fontSize: this.editor.const.fontSize,
-				color: this.editor.color.bpmLine,
+				color: this.editor.resourceManager.theme.color.bpmLine,
 				alpha: 1,
 				text: this.formatTime(bpmTime)
 			});
@@ -154,7 +154,7 @@ export class Parser {
 				scrollHeight: bpmHeight + this.editor.const.paddingY,
 				alignY: 'bottom',
 				fontSize: this.editor.const.fontSize,
-				color: this.editor.color.bpmLine,
+				color: this.editor.resourceManager.theme.color.bpmLine,
 				alpha: 1,
 				text: bpm.bpm.toString()
 			});
@@ -173,7 +173,7 @@ export class Parser {
 				alignX: 'right',
 				alignY: 'middle',
 				fontSize: this.editor.const.fontSize,
-				color: this.editor.color.timeText,
+				color: this.editor.resourceManager.theme.color.timeText,
 				alpha: 1,
 				text
 			});
@@ -291,7 +291,7 @@ export class Parser {
 						x: this.editor.calculator.getLaneX(note.lane + 0.1),
 						width: this.editor.calculator.getLaneWidth(note.width - 0.2),
 						scrollHeight: height,
-						color: slide.critical ? this.editor.color.slideCriticalInvisibleNode : this.editor.color.slideInvisibleNode,
+						color: slide.critical ? this.editor.resourceManager.theme.color.slideCriticalInvisibleNode : this.editor.resourceManager.theme.color.slideInvisibleNode,
 						alpha: 1,
 						id: note.id,
 						slideId: slide.id
@@ -337,8 +337,8 @@ export class Parser {
 							[...this.bezier, note.bezier][note.curve] as false | number[]
 						).reverse()
 					],
-					color: slide.critical ? this.editor.color.slideCriticalCurve : this.editor.color.slideCurve,
-					alpha: slide.critical ? this.editor.color.slideCriticalCurveAlpha : this.editor.color.slideCurveAlpha,
+					color: slide.critical ? this.editor.resourceManager.theme.color.slideCriticalCurve : this.editor.resourceManager.theme.color.slideCurve,
+					alpha: slide.critical ? this.editor.resourceManager.theme.color.slideCriticalCurveAlpha : this.editor.resourceManager.theme.color.slideCurveAlpha,
 					id: note.id,
 					slideId: slide.id
 				});

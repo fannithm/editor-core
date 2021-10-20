@@ -1,6 +1,6 @@
 export * from './AudioManager';
 export * from './Calculator';
-export * from './ColorTheme';
+export * from './DefaultColorTheme';
 export * from './Constants';
 export * from './CursorManager';
 export * from './Editor';

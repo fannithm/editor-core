@@ -74,7 +74,17 @@ export enum EventType {
 	 * Emitted when cursor is moved
 	 * @event cursorMove
 	 */
-	CursorMove = 'cursorMove'
+	CursorMove = 'cursorMove',
+
+	/**
+	 * @event resourceLoadProgress
+	 */
+	ResourceLoadProgress = 'resourceLoadProgress',
+
+	/**
+	 * @event resourceLoadError
+	 */
+	ResourceLoadError = 'resourceLoadError',
 }
 
 export interface IScrollEvent {
@@ -100,4 +110,15 @@ export interface IAudioTimeUpdateEvent {
 export interface ICursorMoveEvent {
 	positionX: number,
 	positionY: Fraction
+}
+
+export interface IResourceLoadProgressEvent {
+	loader: PIXI.Loader,
+	resource: PIXI.Resource
+}
+
+export interface IResourceLoadErrorEvent {
+	error: Error,
+	loader: PIXI.Loader,
+	resource: PIXI.Resource
 }

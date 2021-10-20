@@ -1,4 +1,6 @@
-export const ColorTheme = {
+import { IEditorThemeColor } from './ResourceManager';
+
+export const DefaultColorTheme: IEditorThemeColor = {
 	background: 0xffffff,
 	primeLane: 0x000000,
 	primeLaneAlpha: 1,

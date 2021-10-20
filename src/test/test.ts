@@ -1,9 +1,17 @@
 import convertor from '@fannithm/sus-fannithm-convertor';
-import './style.css';
-import { Editor, EditorCursorType, EventType, IScrollEvent } from '../PJSK';
+import {
+	Editor,
+	EditorCursorType,
+	EventType,
+	IResourceLoadErrorEvent,
+	IResourceLoadProgressEvent,
+	IScrollEvent
+} from '../PJSK';
 import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 
-(function () {
+import './style.css';
+
+(function (window: any) {
 	function $(s: string) {
 		return document.querySelector(s);
 	}
@@ -11,20 +19,26 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 	document.addEventListener('DOMContentLoaded', ready);
 
 	async function ready() {
-		console.log('ready');
-
-		await Editor.loadResource((loader, resource) => {
-			console.log(`${ loader.progress }% loading: ${ resource.url }`);
+		// initialize editor
+		const theme = await (await fetch('pjsk/editor-theme.json')).json();
+		const editor = new Editor($('#app') as HTMLDivElement, theme);
+		window.editor = editor;
+		const $progress = $('#progress') as HTMLDivElement;
+		editor.event.on(EventType.ResourceLoadProgress, ({ loader }: IResourceLoadProgressEvent) => {
+			$progress.innerHTML = `Loading ${ loader.progress.toFixed(2) }%`;
 		});
-
-		const editor = new Editor($('#app') as HTMLDivElement);
-		console.log(editor);
+		editor.event.on(EventType.ResourceLoadError, ({ error }: IResourceLoadErrorEvent) => {
+			console.error('load error:', error);
+		});
+		await editor.resourceManager.loadResource();
+		$progress.style.display = 'none';
 
 		const setMap = (map: IMap) => {
 			editor.map = map;
 			editor.audioManager.totalTime = 180;
 			editor.scrollController.scrollTo(0);
 		};
+		// load official map
 		const $id = $('#id') as HTMLInputElement;
 		const $diff = $('#diff') as HTMLSelectElement;
 
@@ -34,6 +48,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			setMap(map);
 		});
 
+		// input sus file
 		const $container = $('#container') as HTMLDivElement;
 		const $text = $('#text') as HTMLTextAreaElement;
 
@@ -47,6 +62,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			setMap(map);
 		});
 
+		// zoom in/out
 		const scaleEditor = (scale: number) => {
 			editor.const.heightPerSecondRaw *= scale;
 		};
@@ -57,43 +73,53 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			scaleEditor(1 / 1.5);
 		});
 
+		// update scroll bottom input box
 		const $bottom = $('#bottom') as HTMLInputElement;
 		editor.event.on(EventType.Scroll, (event: IScrollEvent) => {
 			$bottom.value = event.newScrollBottom.toString();
 		});
+		// scroll manually
 		$('#scroll').addEventListener('click', () => {
 			editor.scrollController.scrollTo(parseInt($bottom.value));
 		});
 
+		// change beat slice
 		$('#slice').addEventListener('change', function () {
 			editor.beatSlice = parseInt(this.value);
 		});
 
+		// load audio
 		$('#music').addEventListener('input', function () {
 			const file = this.files[0];
 			editor.audioManager.loadAudio(file);
 		});
 
+		// play bgm
 		$('#play').addEventListener('click', () => {
 			editor.audioManager.play();
 		});
 
+		// pause bgm
 		$('#pause').addEventListener('click', () => {
 			editor.audioManager.pause();
 		});
 
+		// stop bgm
 		$('#stop').addEventListener('click', () => {
 			editor.audioManager.stop();
 		});
 
+		// toggle follow
 		$('#follow').addEventListener('input', function () {
 			editor.audioManager.follow = this.checked;
 		});
 
+		// delete note
 		$('#delete').addEventListener('click', () => {
 			editor.selectionManager.deleteNotesBySelection(editor.selectionManager.selection);
 		});
 
+		// import map from local file
 		const file = document.createElement('input');
 		file.type = 'file';
 		file.accept = '.json';
@@ -104,6 +130,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			setMap(JSON.parse(await file.files[0].text()));
 		});
 
+		// download map
 		$('#export').addEventListener('click', () => {
 			const map = JSON.stringify(editor.map);
 			const file = new Blob([map], { type: 'application/json' });
@@ -115,6 +142,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			URL.revokeObjectURL(url);
 		});
 
+		// change note cursor
 		const changeNoteType = (type: EditorCursorType) => {
 			return () => {
 				editor.cursorManager.type = type;
@@ -137,6 +165,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			editor.cursorManager.type = EditorCursorType.BPM;
 		}
 
+		// key bindings
 		document.addEventListener('keydown', event => {
 			switch (event.key) {
 				case '1':
@@ -203,8 +232,12 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 			}
 		});
 
-		const res = await fetch('map/test.json');
+		// load test map
+		const res = await fetch('pjsk/test/map/test.json');
 		const map = await res.json();
 		setMap(map);
+
+		// start editor
+		editor.start();
 	}
-})();
+})(window);

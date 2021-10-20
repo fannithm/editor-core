@@ -4,7 +4,7 @@ import { Fraction } from '@fannithm/utils';
 import { EventHandler } from './EventHandler';
 import { AudioManager } from './AudioManager';
 import { Calculator } from './Calculator';
-import { ColorTheme } from './ColorTheme';
+import { DefaultColorTheme } from './DefaultColorTheme';
 import { Constants } from './Constants';
 import { EventEmitter } from './EventEmitter';
 import { Parser } from './Parser';
@@ -13,6 +13,7 @@ import { ScrollController } from './ScrollController';
 import { TimeLineManager } from './TimeLineManager';
 import { SelectionManager } from './SelectionManager';
 import { CursorManager } from './CursorManager';
+import { IEditorTheme, ResourceManager } from './ResourceManager';
 
 /**
  * ## Usage
@@ -45,13 +46,16 @@ export class Editor {
 	public timeLineManager: TimeLineManager;
 	public selectionManager: SelectionManager;
 	public cursorManager: CursorManager;
-	private _color: Record<string, number>;
+	public resourceManager: ResourceManager;
+
+	public static DefaultThemeColor = Object.freeze(DefaultColorTheme);
 
 	/**
 	 * @param container Editor container for containing canvas element.
+	 * @param theme Editor theme config
 	 */
-	constructor(public container: HTMLElement) {
-		this._color = ColorTheme;
+	constructor(public container: HTMLElement, theme: IEditorTheme) {
+		this.resourceManager = new ResourceManager(this, theme);
 		this.const = new Constants(this);
 		this.event = new EventEmitter(this);
 		this.handler = new EventHandler(this);
@@ -63,10 +67,9 @@ export class Editor {
 		this.timeLineManager = new TimeLineManager();
 		this.selectionManager = new SelectionManager(this);
 		this.cursorManager = new CursorManager(this);
-		this.start();
 	}
 
-	private start(): void {
+	start(): void {
 		this.handler.listen();
 		this.renderer.parseAndRender();
 		this.renderer.renderOnce();
@@ -77,20 +80,6 @@ export class Editor {
 		this.renderer.destroyContainers();
 		this.renderer.app.destroy(true, {
 			children: true
-		});
-	}
-
-	static loadResource(
-		onLoad?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void,
-		onError?: (loader: PIXI.Loader, resource: PIXI.ILoaderResource) => void): Promise<void> {
-		return new Promise<void>(resolve => {
-			const loader = PIXI.Loader.shared;
-			loader.add('images/sprite.json').load(() => {
-				console.log('load resources completed');
-				resolve();
-			});
-			onLoad && loader.onLoad.add(onLoad);
-			onError && loader.onError.add(onError);
 		});
 	}
 
@@ -113,17 +102,6 @@ export class Editor {
 
 	get beatSlice(): number {
 		return this._beatSlice;
-	}
-
-	public get color(): Record<string, number> {
-		return this._color;
-	}
-
-	public set color(color: Record<string, number>) {
-		this._color = color;
-		// update color theme
-		this.renderer.updateColorTheme();
-		this.renderer.parseAndRender();
 	}
 
 	fraction(beat: MapBeat): Fraction {
