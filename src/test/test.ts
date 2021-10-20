@@ -11,7 +11,7 @@ import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 
 import './style.css';
 
-(function (window: any) {
+(function (window: unknown) {
 	function $(s: string) {
 		return document.querySelector(s);
 	}
@@ -22,7 +22,7 @@ import './style.css';
 		// initialize editor
 		const theme = await (await fetch('pjsk/editor-theme.json')).json();
 		const editor = new Editor($('#app') as HTMLDivElement, theme);
-		window.editor = editor;
+		(window as { editor: Editor }).editor = editor;
 		const $progress = $('#progress') as HTMLDivElement;
 		editor.event.on(EventType.ResourceLoadProgress, ({ loader }: IResourceLoadProgressEvent) => {
 			$progress.innerHTML = `Loading ${ loader.progress.toFixed(2) }%`;
