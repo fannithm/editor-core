@@ -7,6 +7,8 @@ import postcss from 'rollup-plugin-postcss';
 import filesize from 'rollup-plugin-filesize';
 import { uglify } from 'rollup-plugin-uglify';
 
+import pkg from '../package.json';
+
 export default {
 	input: 'src/test/test.ts',
 	output: {
@@ -26,7 +28,10 @@ export default {
 			template: 'src/test/index.html',
 			externals: {
 				before: [
-					{ tag: 'script', src: 'https://unpkg.com/pixi.js@6.0.4/dist/browser/pixi.min.js' }
+					{
+						tag: 'script',
+						src: `https://unpkg.com/pixi.js@${ pkg.devDependencies['pixi.js'] }/dist/browser/pixi.js`
+					}
 				]
 			},
 			minify: {

@@ -7,13 +7,15 @@ import spritesmith from 'rollup-plugin-sprite';
 import livereload from 'rollup-plugin-livereload';
 import postcss from 'rollup-plugin-postcss';
 
+import pkg from '../package.json';
+
 export default {
 	input: 'src/test/test.ts',
 	watch: {
 		include: 'src/**/*'
 	},
 	output: {
-		file: 'build/bundle.js',
+		file: '.temp/bundle.js',
 		format: 'iife',
 		globals: {
 			'pixi.js': 'PIXI'
@@ -27,7 +29,10 @@ export default {
 			template: 'src/test/index.html',
 			externals: {
 				before: [
-					{ tag: 'script', src: 'https://unpkg.com/pixi.js@6.0.4/dist/browser/pixi.js' }
+					{
+						tag: 'script',
+						src: `https://unpkg.com/pixi.js@${ pkg.devDependencies['pixi.js'] }/dist/browser/pixi.js`
+					}
 				]
 			}
 		}),
@@ -37,11 +42,11 @@ export default {
 				glob: '*.png'
 			},
 			target: {
-				image: 'build/images/pjsk_sprite.png',
-				css: 'build/images/pjsk_sprite.json',
+				image: '.temp/pjsk/image/sprite.png',
+				css: '.temp/pjsk/image/sprite.json',
 				format: 'json_texture'
 			},
-			cssImageRef: './pjsk_sprite.png',
+			cssImageRef: './sprite.png',
 			spritesmithOptions: {
 				padding: 4
 			}
@@ -49,7 +54,7 @@ export default {
 		postcss(),
 		typescript(),
 		serve({
-			contentBase: ['build', 'public'],
+			contentBase: ['.temp', 'public'],
 			host: '0.0.0.0',
 			port: 8081
 		}),

@@ -232,5 +232,5 @@ modules.xml
 
 # End of https://www.toptal.com/developers/gitignore/api/node,visualstudiocode,webstorm+all
 
-build/
+.temp/
 pages/
