@@ -1,7 +1,7 @@
 {
   "name": "@fannithm/editor-core",
   "description": "Editor core for Fannithm Editor",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
   "main": "dist/fannithm-editor-core.cjs",
   "module": "dist/fannithm-editor-core.mjs",
   "files": [
@@ -22,7 +22,7 @@
     "build": "rollup -c .build/rollup.config.prod.js",
     "build:preview": "rollup -c .build/rollup.config.prev.js",
     "build:docs": "typedoc",
-    "postinstall": "patch-package"
+    "prepare": "patch-package"
   },
   "devDependencies": {
     "@fannithm/sus-fannithm-convertor": "^1.2.5",
@@ -36,7 +36,6 @@
     "eslint": "^7.32.0",
     "patch-package": "^6.4.7",
     "postcss": "^8.3.6",
-    "postinstall-postinstall": "^2.1.0",
     "rollup": "^2.54.0",
     "rollup-plugin-filesize": "^9.1.1",
     "rollup-plugin-html2": "^3.0.1",
