@@ -10,6 +10,6 @@
 		"node_critical": "pjsk/audio/se/default/node_critical.mp3"
 	},
 	"image": {
-		"sprite": "images/sprite.json"
+		"sprite": "pjsk/image/sprite.json"
 	}
 }
