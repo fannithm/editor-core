@@ -1,0 +1,13 @@
+diff --git a/node_modules/rollup-plugin-sprite/lib/spritesmith.js b/node_modules/rollup-plugin-sprite/lib/spritesmith.js
+index 5663b46..5b40597 100644
+--- a/node_modules/rollup-plugin-sprite/lib/spritesmith.js
++++ b/node_modules/rollup-plugin-sprite/lib/spritesmith.js
+@@ -36,7 +36,7 @@ module.exports = (customOptions, callback) => {
+           //Custom template
+           const cssFormat = customTemplate
+             ? "spritesmith-custom"
+-            : mimeTypes[extname(target.css)];
++            : (target.format || mimeTypes[extname(target.css)]);
+           if (typeof customTemplate === "string") {
+             templater.addHandlebarsTemplate(
+               cssFormat,

@@ -2,8 +2,8 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import serve from 'rollup-plugin-serve';
-import html2 from 'rollup-plugin-html2'
-import spritesmith from "@zz5840/rollup-plugin-sprite";
+import html2 from 'rollup-plugin-html2';
+import spritesmith from 'rollup-plugin-sprite';
 import livereload from 'rollup-plugin-livereload';
 import postcss from 'rollup-plugin-postcss';
 
@@ -33,14 +33,15 @@ export default {
 		}),
 		spritesmith({
 			src: {
-				cwd: "./src/images/notes/",
-				glob: "*.png"
+				cwd: 'src/pjsk/images/',
+				glob: '*.png'
 			},
 			target: {
-				image: "./build/images/sprite.png",
-				css: "./build/images/sprite.json",
-				format: "json_texture"
+				image: 'build/images/pjsk_sprite.png',
+				css: 'build/images/pjsk_sprite.json',
+				format: 'json_texture'
 			},
+			cssImageRef: './pjsk_sprite.png',
 			spritesmithOptions: {
 				padding: 4
 			}
@@ -54,4 +55,4 @@ export default {
 		}),
 		livereload()
 	]
-}
+};

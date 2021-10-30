@@ -5,12 +5,7 @@
 	"compilerOptions": {
 		"moduleResolution": "node",
 		"target": "ES2021",
-		"allowSyntheticDefaultImports": true,
-		"paths": {
-			"mini-signals": [
-				"./node_modules/resource-loader/typings/mini-signals.d.ts"
-			]
-		}
+		"allowSyntheticDefaultImports": true
 	},
 	"typedocOptions": {
 		"entryPoints": [

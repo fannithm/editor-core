@@ -25,10 +25,10 @@ jobs:
           npm config set '//npm.pkg.github.com/:_authToken' "${{ secrets.GITHUB_TOKEN }}"
           yarn install
           yarn build:preview
-          cp -r ./public/* ./dist/
+          cp -r ./public/* ./pages/
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./pages
           cname: pjsk-preview.fannithm.xyz

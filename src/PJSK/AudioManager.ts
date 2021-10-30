@@ -55,6 +55,10 @@ export class AudioManager {
 		this.playTicker.stop();
 	}
 
+	destroy(): void {
+		this.stop();
+	}
+
 	public get currentTime(): number {
 		return this.audio?.currentTime || 0;
 	}

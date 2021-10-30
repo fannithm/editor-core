@@ -2,7 +2,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import html2 from 'rollup-plugin-html2';
-import spritesmith from '@zz5840/rollup-plugin-sprite';
+import spritesmith from 'rollup-plugin-sprite';
 import postcss from 'rollup-plugin-postcss';
 import filesize from 'rollup-plugin-filesize';
 import { uglify } from 'rollup-plugin-uglify';
@@ -10,7 +10,7 @@ import { uglify } from 'rollup-plugin-uglify';
 export default {
 	input: 'src/test/test.ts',
 	output: {
-		dir: 'dist',
+		dir: 'pages',
 		entryFileNames: 'bundle-[hash].js',
 		format: 'iife',
 		globals: {
@@ -19,12 +19,9 @@ export default {
 	},
 	external: ['pixi.js'],
 	plugins: [
-		resolve({
-			customResolveOptions: {
-				moduleDirectories: ['node_modules']
-			}
-		}),
+		resolve(),
 		commonjs(),
+		typescript(),
 		html2({
 			template: 'src/test/index.html',
 			externals: {
@@ -40,20 +37,20 @@ export default {
 		}),
 		spritesmith({
 			src: {
-				cwd: './src/images/notes/',
+				cwd: 'src/pjsk/images/',
 				glob: '*.png'
 			},
 			target: {
-				image: './dist/images/sprite.png',
-				css: './dist/images/sprite.json',
+				image: 'public/pjsk/image/sprite.png',
+				css: 'public/pjsk/image/sprite.json',
 				format: 'json_texture'
 			},
+			cssImageRef: './sprite.png',
 			spritesmithOptions: {
 				padding: 4
 			}
 		}),
 		postcss(),
-		typescript(),
 		uglify(),
 		filesize()
 	]

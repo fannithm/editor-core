@@ -6,7 +6,7 @@ import {
 	IResourceLoadErrorEvent,
 	IResourceLoadProgressEvent,
 	IScrollEvent
-} from '../PJSK';
+} from '../pjsk';
 import { CurveType, FlickDirection, IMap } from '@fannithm/const/dist/pjsk';
 
 import './style.css';
@@ -233,7 +233,7 @@ import './style.css';
 		});
 
 		// load test map
-		const res = await fetch('pjsk/test/map/test.json');
+		const res = await fetch('pjsk/map/test.json');
 		const map = await res.json();
 		setMap(map);
 

@@ -1,4 +1,5 @@
 import { Editor } from './Editor';
+import { DefaultThemeColor } from './DefaultThemeColor';
 import * as PIXI from 'pixi.js';
 import { EventType } from './EventEmitter';
 
@@ -10,7 +11,7 @@ export class ResourceManager {
 	constructor(private editor: Editor, theme: IEditorTheme) {
 		this.theme = {
 			...theme,
-			color: Object.assign({}, Editor.DefaultThemeColor, theme.color)
+			color: Object.assign({}, DefaultThemeColor, theme.color)
 		};
 	}
 
@@ -47,33 +48,33 @@ export interface IEditorTheme {
 }
 
 export interface IEditorThemeColor {
-	background: number;
-	primeLane: number;
-	primeLaneAlpha: number;
-	secondaryLane: number;
-	secondaryLaneAlpha: number;
-	bpmLine: number;
-	timeText: number;
-	currentTimeLine: number;
-	beatLineWhole: number;
-	beatLineWholeAlpha: number;
-	beatLineHalf: number;
-	beatLineHalfAlpha: number;
-	beatLineThird: number;
-	beatLineThirdAlpha: number;
-	beatLineQuarter: number;
-	beatLineQuarterAlpha: number;
-	slideCurve: number;
-	slideCurveAlpha: number;
-	slideInvisibleNode: number;
-	slideCriticalCurve: number;
-	slideCriticalCurveAlpha: number;
-	slideCriticalInvisibleNode: number;
-	selectionBox: number;
-	selectionBoxAlpha: number;
-	selectionRect: number;
-	warningRect: number;
-	cursor: number;
+	background?: number;
+	primeLane?: number;
+	primeLaneAlpha?: number;
+	secondaryLane?: number;
+	secondaryLaneAlpha?: number;
+	bpmLine?: number;
+	timeText?: number;
+	currentTimeLine?: number;
+	beatLineWhole?: number;
+	beatLineWholeAlpha?: number;
+	beatLineHalf?: number;
+	beatLineHalfAlpha?: number;
+	beatLineThird?: number;
+	beatLineThirdAlpha?: number;
+	beatLineQuarter?: number;
+	beatLineQuarterAlpha?: number;
+	slideCurve?: number;
+	slideCurveAlpha?: number;
+	slideInvisibleNode?: number;
+	slideCriticalCurve?: number;
+	slideCriticalCurveAlpha?: number;
+	slideCriticalInvisibleNode?: number;
+	selectionBox?: number;
+	selectionBoxAlpha?: number;
+	selectionRect?: number;
+	warningRect?: number;
+	cursor?: number;
 }
 
 export interface IEditorThemeImage {

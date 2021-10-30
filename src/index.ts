@@ -8,4 +8,4 @@
  * BanG Dream Editor: Still not started
  * @module @fannithm/editor-core
  */
-export * as PJSK from './PJSK';
+export * as PJSK from './pjsk';

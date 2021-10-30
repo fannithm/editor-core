@@ -4,7 +4,6 @@ import { Fraction } from '@fannithm/utils';
 import { EventHandler } from './EventHandler';
 import { AudioManager } from './AudioManager';
 import { Calculator } from './Calculator';
-import { DefaultColorTheme } from './DefaultColorTheme';
 import { Constants } from './Constants';
 import { EventEmitter } from './EventEmitter';
 import { Parser } from './Parser';
@@ -48,8 +47,6 @@ export class Editor {
 	public cursorManager: CursorManager;
 	public resourceManager: ResourceManager;
 
-	public static DefaultThemeColor = Object.freeze(DefaultColorTheme);
-
 	/**
 	 * @param container Editor container for containing canvas element.
 	 * @param theme Editor theme config
@@ -79,8 +76,11 @@ export class Editor {
 		this.event.dispatchDestroyEvent();
 		this.renderer.destroyContainers();
 		this.renderer.app.destroy(true, {
-			children: true
+			children: true,
+			texture: true,
+			baseTexture: true
 		});
+		this.audioManager.destroy();
 	}
 
 	set map(map: IMap) {
