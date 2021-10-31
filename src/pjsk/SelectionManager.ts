@@ -1,8 +1,15 @@
-import { PJSK, UUID } from '@fannithm/const';
+import { UUID } from '@fannithm/const';
 import { Editor } from './Editor';
 import { IRenderInvisibleNodeObject, IRenderNoteObject, IRenderVisibleNodeObject } from './Parser';
-import { INoteSlideEndDefault, INoteSlideEndFlick, INoteSlideStart, NoteType } from '@fannithm/const/dist/pjsk';
-import SlideNote from './notes/SlideNote';
+import {
+	INoteTap,
+	INoteFlick,
+	INoteSlide,
+	INoteSlideStart,
+	INoteSlideEndDefault,
+	INoteSlideEndFlick,
+	NoteType
+} from '@fannithm/const/dist/pjsk';
 
 export class SelectionManager {
 	public selection: IEditorSelection;
@@ -185,6 +192,6 @@ export interface IEditorSelection {
 }
 
 export interface IEditorSelectionNote {
-	single: (PJSK.INoteTap | PJSK.INoteFlick)[];
-	slide: PJSK.INoteSlide[];
+	single: (INoteTap | INoteFlick)[];
+	slide: INoteSlide[];
 }

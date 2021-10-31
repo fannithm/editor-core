@@ -1,11 +1,13 @@
 {
   "name": "@fannithm/editor-core",
   "description": "Editor core for Fannithm Editor",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "main": "dist/fannithm-editor-core.cjs",
   "module": "dist/fannithm-editor-core.mjs",
+  "types": "index.d.ts",
   "files": [
     "dist",
+    "index.d.ts",
     "LICENSE",
     "package.json",
     "README.md",
@@ -43,6 +45,7 @@
     "rollup-plugin-postcss": "^4.0.0",
     "rollup-plugin-serve": "^1.1.0",
     "rollup-plugin-sprite": "^0.1.2",
+    "rollup-plugin-ts": "^1.4.7",
     "rollup-plugin-uglify": "^6.0.4",
     "tslib": "^2.3.0",
     "typedoc": "^0.21.5",
