@@ -5,18 +5,9 @@ import { Editor } from './Editor';
 import { ScrollController } from './ScrollController';
 import { SelectionManager } from './SelectionManager';
 import { EditorCursorType } from './CursorManager';
-import {
-	CurveType,
-	INoteSlide,
-	INoteSlideEndDefault,
-	INoteSlideEndFlick,
-	MapBeat,
-	NoteType
-} from '@fannithm/const/dist/pjsk';
+import { PJSK as PJSKConst } from '@fannithm/const';
 
 export class EventHandler {
-	private readonly windowMouseUpHandler: () => void;
-	private readonly stageMouseMoveWhenMouseDownHandler: () => void;
 	public readonly lastMousePosition: {
 		x: number,
 		y: number
@@ -28,40 +19,67 @@ export class EventHandler {
 			x: 0,
 			y: 0
 		};
-		this.windowMouseUpHandler = this._windowMouseUpHandler.bind(this);
-		this.stageMouseMoveWhenMouseDownHandler = this._stageMouseMoveWhenMouseDownHandler.bind(this);
+		// bind this reference
+		[
+			// event below will be added and removed in other events and manual removing is not needed
+			'windowMouseUpHandler',
+			'stageMouseMoveWhenMouseDownHandler',
+			// event below will be removed in `removeAll` method
+			'mouseWheelHandler',
+			'stageMouseDownHandler',
+			'stageMouseMoveHandler',
+			'stageClickHandler',
+			'scrollTickerHandler',
+			'audioPlayTickerHandler',
+			'editorScrollHandler',
+			'editorCursorMoveHandler'
+		].forEach(v => this[v] = this[v].bind(this));
 	}
 
 	listen(): void {
 		// mouse wheel
-		this.editor.renderer.app.view.addEventListener('wheel', this.mouseWheelHandler.bind(this));
+		this.editor.renderer.app.view.addEventListener('wheel', this.mouseWheelHandler);
 
 		// mouse down
-		this.editor.renderer.app.stage.on('mousedown', this.stageMouseDownHandler.bind(this));
+		this.editor.renderer.app.stage.on('mousedown', this.stageMouseDownHandler);
 
 		// mouse move
-		this.editor.renderer.app.stage.on('mousemove', this.stageMouseMoveHandler.bind(this));
+		this.editor.renderer.app.stage.on('mousemove', this.stageMouseMoveHandler);
 
-		this.editor.renderer.app.stage.on('click', this.stageClickHandler.bind(this));
+		this.editor.renderer.app.stage.on('click', this.stageClickHandler);
 
 		// scroll ticker
-		this.scrollController.scrollTicker.add(this.scrollTickerHandler.bind(this));
+		this.scrollController.scrollTicker.add(this.scrollTickerHandler);
 
 		// audio play ticker
-		this.editor.audioManager.playTicker.add(this.audioPlayTickerHandler.bind(this));
+		this.editor.audioManager.playTicker.add(this.audioPlayTickerHandler);
 
-		this.editor.event.on(EventType.Scroll, () => {
-			this.editor.cursorManager.calculateCursorPosition();
-			const beat = this.editor.cursorManager.positionY;
-			const lane = this.editor.cursorManager.positionX;
-			this.editor.renderer.updateCursorPosition(beat, lane);
-		});
+		this.editor.event.on(EventType.Scroll, this.editorScrollHandler);
 
-		this.editor.event.on(EventType.CursorMove, () => {
-			// change slide cursor
-			this.editor.cursorManager.autoChangeSlideCursor();
-			this.editor.cursorManager.updateObject();
-		});
+		this.editor.event.on(EventType.CursorMove, this.editorCursorMoveHandler);
+	}
+
+	removeAll(): void {
+		this.editor.renderer.app.view.removeEventListener('wheel', this.mouseWheelHandler);
+		this.editor.renderer.app.stage.off('mousedown', this.stageMouseDownHandler);
+		this.editor.renderer.app.stage.off('mousemove', this.stageMouseMoveHandler);
+		this.scrollController.scrollTicker.remove(this.scrollTickerHandler);
+		this.editor.audioManager.playTicker.remove(this.audioPlayTickerHandler);
+		this.editor.event.off(EventType.Scroll, this.editorScrollHandler);
+		this.editor.event.off(EventType.CursorMove, this.editorCursorMoveHandler);
+	}
+
+	private editorScrollHandler() {
+		this.editor.cursorManager.calculateCursorPosition();
+		const beat = this.editor.cursorManager.positionY;
+		const lane = this.editor.cursorManager.positionX;
+		this.editor.renderer.updateCursorPosition(beat, lane);
+	}
+
+	private editorCursorMoveHandler() {
+		// change slide cursor
+		this.editor.cursorManager.autoChangeSlideCursor();
+		this.editor.cursorManager.updateObject();
 	}
 
 	private mouseWheelHandler(event: WheelEvent): void {
@@ -94,7 +112,7 @@ export class EventHandler {
 	 * Select area mouse move when mouse down handler.
 	 * Used to resize the selection box.
 	 */
-	private _stageMouseMoveWhenMouseDownHandler(): void {
+	private stageMouseMoveWhenMouseDownHandler(): void {
 		const point = this.lastMousePosition;
 		this.selectionManager.selectionBox[2] = point.x;
 		this.selectionManager.selectionBox[3] = this.scrollController.scrollBottom + (this.editor.const.height - point.y);
@@ -115,7 +133,7 @@ export class EventHandler {
 		this.editor.renderer.render();
 	}
 
-	private _windowMouseUpHandler() {
+	private windowMouseUpHandler() {
 		this.cursorMoved = false;
 		window.removeEventListener('mouseup', this.windowMouseUpHandler);
 		this.selectionManager.selectionBox = [0, 0, 0, 0];
@@ -151,7 +169,7 @@ export class EventHandler {
 			// place note
 			const note = {
 				id: uuid(),
-				beat: [this.editor.cursorManager.positionY.integer, this.editor.cursorManager.positionY.numerator, this.editor.cursorManager.positionY.denominator] as MapBeat,
+				beat: [this.editor.cursorManager.positionY.integer, this.editor.cursorManager.positionY.numerator, this.editor.cursorManager.positionY.denominator] as PJSKConst.MapBeat,
 				lane: this.editor.cursorManager.lane,
 				timeline: this.editor.timeLineManager.prime,
 				width: this.editor.cursorManager.width
@@ -159,13 +177,13 @@ export class EventHandler {
 			if (this.editor.cursorManager.type === EditorCursorType.Tap) {
 				this.editor.map.notes.push({
 					...note,
-					type: NoteType.Tap,
+					type: PJSKConst.NoteType.Tap,
 					critical: this.editor.cursorManager.critical
 				});
 			} else if (this.editor.cursorManager.type === EditorCursorType.Flick) {
 				this.editor.map.notes.push({
 					...note,
-					type: NoteType.Flick,
+					type: PJSKConst.NoteType.Flick,
 					direction: this.editor.cursorManager.direction,
 					critical: this.editor.cursorManager.critical
 				});
@@ -175,7 +193,7 @@ export class EventHandler {
 				let start = this.editor.cursorManager.slideHeadObject;
 				let end = this.editor.cursorManager.slideTailObject;
 				let startBeat = this.editor.cursorManager.slideHeadBeat;
-				let endBeat = [this.editor.cursorManager.positionY.integer, this.editor.cursorManager.positionY.numerator, this.editor.cursorManager.positionY.denominator] as MapBeat;
+				let endBeat = [this.editor.cursorManager.positionY.integer, this.editor.cursorManager.positionY.numerator, this.editor.cursorManager.positionY.denominator] as PJSKConst.MapBeat;
 				if (start.scrollHeight === end.scrollHeight) return;
 				if (start.scrollHeight > end.scrollHeight) {
 					[start, end] = [end, start];
@@ -183,16 +201,16 @@ export class EventHandler {
 				}
 				const endNote = {
 					id: uuid(),
-					type: this.editor.cursorManager.flickEnd ? NoteType.SlideEndFlick : NoteType.SlideEndDefault,
+					type: this.editor.cursorManager.flickEnd ? PJSKConst.NoteType.SlideEndFlick : PJSKConst.NoteType.SlideEndDefault,
 					beat: endBeat,
 					lane: end.rawLane,
 					width: end.rawWidth,
-					curve: CurveType.None
-				} as INoteSlideEndDefault | INoteSlideEndFlick;
+					curve: PJSKConst.CurveType.None
+				} as PJSKConst.INoteSlideEndDefault | PJSKConst.INoteSlideEndFlick;
 				if (this.editor.cursorManager.flickEnd) {
-					(endNote as INoteSlideEndFlick).direction = this.editor.cursorManager.direction;
+					(endNote as PJSKConst.INoteSlideEndFlick).direction = this.editor.cursorManager.direction;
 					if (this.editor.cursorManager.critical)
-						(endNote as INoteSlideEndFlick).critical = true;
+						(endNote as PJSKConst.INoteSlideEndFlick).critical = true;
 				}
 				const slide = {
 					id: note.id,
@@ -200,7 +218,7 @@ export class EventHandler {
 					notes: [
 						{
 							id: uuid(),
-							type: NoteType.SlideStart,
+							type: PJSKConst.NoteType.SlideStart,
 							beat: startBeat,
 							lane: start.rawLane,
 							width: start.rawWidth,
@@ -208,7 +226,7 @@ export class EventHandler {
 						},
 						endNote
 					]
-				} as INoteSlide;
+				} as PJSKConst.INoteSlide;
 				if (this.editor.cursorManager.slideCritical) slide.critical = true;
 				this.editor.map.slides.push(slide);
 				this.editor.cursorManager.endSlidePlacement();
@@ -222,12 +240,12 @@ export class EventHandler {
 					node.curve = this.editor.cursorManager.curve;
 					node.lane = note.lane;
 					node.width = note.width;
-					if (![NoteType.SlideStart, NoteType.SlideEndFlick, NoteType.SlideEndDefault].includes(node.type))
-						node.type = this.editor.cursorManager.nodeVisible ? NoteType.SlideVisible : NoteType.SlideInvisible;
+					if (![PJSKConst.NoteType.SlideStart, PJSKConst.NoteType.SlideEndFlick, PJSKConst.NoteType.SlideEndDefault].includes(node.type))
+						node.type = this.editor.cursorManager.nodeVisible ? PJSKConst.NoteType.SlideVisible : PJSKConst.NoteType.SlideInvisible;
 				} else {
 					slide.notes.push({
 						id: note.id,
-						type: this.editor.cursorManager.nodeVisible ? NoteType.SlideVisible : NoteType.SlideInvisible,
+						type: this.editor.cursorManager.nodeVisible ? PJSKConst.NoteType.SlideVisible : PJSKConst.NoteType.SlideInvisible,
 						beat: note.beat,
 						lane: note.lane,
 						width: note.width,

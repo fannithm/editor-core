@@ -1,6 +1,6 @@
 import { Editor } from './Editor';
 import { Fraction } from '@fannithm/utils';
-import { CurveType, FlickDirection, MapBeat } from '@fannithm/const/dist/pjsk';
+import { PJSK as PJSKConst } from '@fannithm/const';
 import {
 	IRenderArrowObject,
 	IRenderCurveObject,
@@ -12,9 +12,9 @@ import {
 export class CursorManager {
 	private _critical = false;
 	private _width = 3;
-	private _direction = FlickDirection.Up;
+	private _direction = PJSKConst.FlickDirection.Up;
 	private _type = EditorCursorType.Default;
-	private _curve = CurveType.Linear;
+	private _curve = PJSKConst.CurveType.Linear;
 	private _nodeVisible = true;
 	public positionX: number;
 	public positionY: Fraction;
@@ -37,7 +37,7 @@ export class CursorManager {
 		rawWidth: 0,
 		rawLane: 0
 	};
-	public slideHeadBeat: MapBeat;
+	public slideHeadBeat: PJSKConst.MapBeat;
 	public slideHeadObject: IRenderNoteObject = {
 		id: 'CursorNote',
 		name: 'CursorNoteSlideHead',
@@ -318,20 +318,20 @@ export class CursorManager {
 		this.updateObject();
 	}
 
-	get direction(): FlickDirection {
+	get direction(): PJSKConst.FlickDirection {
 		return this._direction;
 	}
 
-	set direction(value: FlickDirection) {
+	set direction(value: PJSKConst.FlickDirection) {
 		this._direction = value;
 		this.updateObject();
 	}
 
-	get curve(): CurveType {
+	get curve(): PJSKConst.CurveType {
 		return this._curve;
 	}
 
-	set curve(value: CurveType) {
+	set curve(value: PJSKConst.CurveType) {
 		this._curve = value;
 		this.updateObject();
 	}

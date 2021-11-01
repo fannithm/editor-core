@@ -1,4 +1,4 @@
-import { IMap } from '@fannithm/const/dist/pjsk';
+import { PJSK as PJSKConst } from '@fannithm/const';
 import { Fraction } from '@fannithm/utils';
 import { Editor } from './Editor';
 
@@ -44,7 +44,7 @@ export class Calculator {
 		return this.editor.const.width * (lane * 6) / 100;
 	}
 
-	private get map(): IMap {
+	private get map(): PJSKConst.IMap {
 		return this.editor.map;
 	}
 }

@@ -1,15 +1,6 @@
-import { UUID } from '@fannithm/const';
+import { PJSK as PJSKConst, UUID } from '@fannithm/const';
 import { Editor } from './Editor';
 import { IRenderInvisibleNodeObject, IRenderNoteObject, IRenderVisibleNodeObject } from './Parser';
-import {
-	INoteTap,
-	INoteFlick,
-	INoteSlide,
-	INoteSlideStart,
-	INoteSlideEndDefault,
-	INoteSlideEndFlick,
-	NoteType
-} from '@fannithm/const/dist/pjsk';
 
 export class SelectionManager {
 	public selection: IEditorSelection;
@@ -138,15 +129,15 @@ export class SelectionManager {
 			const slideSelection = selection.slide[slideId];
 			const slideIndex = this.editor.map.slides.findIndex(v => v.id === slideId);
 			const slide = this.editor.map.slides[slideIndex];
-			let start: INoteSlideStart = null;
-			let end: INoteSlideEndDefault | INoteSlideEndFlick = null;
+			let start: PJSKConst.INoteSlideStart = null;
+			let end: PJSKConst.INoteSlideEndDefault | PJSKConst.INoteSlideEndFlick = null;
 			for (let i = 0; i < slideSelection.length; i++) {
 				const id = slideSelection[i];
 				const index = slide.notes.findIndex(v => v.id === id);
 				const [note] = slide.notes.splice(index, 1);
-				if (note.type === NoteType.SlideStart) {
+				if (note.type === PJSKConst.NoteType.SlideStart) {
 					start = note;
-				} else if (note.type === NoteType.SlideEndDefault || note.type === NoteType.SlideEndFlick) {
+				} else if (note.type === PJSKConst.NoteType.SlideEndDefault || note.type === PJSKConst.NoteType.SlideEndFlick) {
 					end = note;
 				}
 			}
@@ -156,7 +147,7 @@ export class SelectionManager {
 			}
 			if (start) {
 				const slideHead = slide.notes[0];
-				slideHead.type = NoteType.SlideStart;
+				slideHead.type = PJSKConst.NoteType.SlideStart;
 				if (slideHead.lane === undefined) {
 					const object = this.editor.parser.renderObjects.visibleNodes.find(v => v.id === slideHead.id);
 					const laneWidth = this.editor.calculator.getLaneWidth(1);
@@ -168,9 +159,9 @@ export class SelectionManager {
 			if (end) {
 				const slideTail = slide.notes[slide.notes.length - 1];
 				slideTail.type = end.type;
-				if (end.type === NoteType.SlideEndFlick) {
-					(slideTail as INoteSlideEndFlick).direction = end.direction;
-					if (end.critical) (slideTail as INoteSlideEndFlick).critical = end.critical;
+				if (end.type === PJSKConst.NoteType.SlideEndFlick) {
+					(slideTail as PJSKConst.INoteSlideEndFlick).direction = end.direction;
+					if (end.critical) (slideTail as PJSKConst.INoteSlideEndFlick).critical = end.critical;
 				}
 				if (slideTail.lane === undefined) {
 					const object = this.editor.parser.renderObjects.visibleNodes.find(v => v.id === slideTail.id);
@@ -192,6 +183,6 @@ export interface IEditorSelection {
 }
 
 export interface IEditorSelectionNote {
-	single: (INoteTap | INoteFlick)[];
-	slide: INoteSlide[];
+	single: (PJSKConst.INoteTap | PJSKConst.INoteFlick)[];
+	slide: PJSKConst.INoteSlide[];
 }

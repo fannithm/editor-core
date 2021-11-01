@@ -1,4 +1,4 @@
-import { INoteFlick, INoteSlide, INoteSlideEndFlick, NoteType } from '@fannithm/const/dist/pjsk';
+import { PJSK as PJSKConst } from '@fannithm/const';
 import { Editor } from './Editor';
 import bezierEasing from 'bezier-easing';
 
@@ -180,7 +180,7 @@ export class Parser {
 		}
 	}
 
-	private pushFlickObject(note: INoteFlick | INoteSlideEndFlick, height: number, slideCritical = false) {
+	private pushFlickObject(note: PJSKConst.INoteFlick | PJSKConst.INoteSlideEndFlick, height: number, slideCritical = false) {
 		const width = Math.min(6, note.width);
 		const renderWidth = Math.max(0.8, Math.min(4, width * 0.6));
 		this.renderObjects.arrows.push({
@@ -203,7 +203,7 @@ export class Parser {
 		for (let i = 0; i < notes.length; i++) {
 			const note = notes[i];
 			const height = this.editor.calculator.getHeightByBeat(this.editor.fraction(note.beat), note.timeline);
-			if (note.type === NoteType.Flick) {
+			if (note.type === PJSKConst.NoteType.Flick) {
 				this.pushFlickObject(note, height);
 			}
 			this.renderObjects.notes.push({
@@ -220,7 +220,7 @@ export class Parser {
 		}
 	}
 
-	private parseUnPositionedNote(slide: INoteSlide, start: number, end: number) {
+	private parseUnPositionedNote(slide: PJSKConst.INoteSlide, start: number, end: number) {
 		const startNote = slide.notes[start];
 		const endNote = slide.notes[end];
 		const startHeight = this.editor.calculator.getHeightByBeat(this.editor.fraction(startNote.beat), slide.timeline);
@@ -258,7 +258,7 @@ export class Parser {
 				const note = slide.notes[j];
 				const height = this.editor.calculator.getHeightByBeat(this.editor.fraction(note.beat), slide.timeline);
 				// parse note
-				if ([NoteType.SlideStart, NoteType.SlideEndDefault].includes(note.type)) {
+				if ([PJSKConst.NoteType.SlideStart, PJSKConst.NoteType.SlideEndDefault].includes(note.type)) {
 					this.renderObjects.notes.push({
 						name: `SlideNote-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane - 0.1),
@@ -271,7 +271,7 @@ export class Parser {
 						rawLane: note.lane,
 						rawWidth: note.width
 					});
-				} else if (note.type === NoteType.SlideEndFlick) {
+				} else if (note.type === PJSKConst.NoteType.SlideEndFlick) {
 					this.renderObjects.notes.push({
 						name: `SlideEndFlick-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane - 0.1),
@@ -285,7 +285,7 @@ export class Parser {
 						rawWidth: note.width
 					});
 					this.pushFlickObject(note, height, slide.critical);
-				} else if (note.type === NoteType.SlideInvisible) {
+				} else if (note.type === PJSKConst.NoteType.SlideInvisible) {
 					this.renderObjects.invisibleNodes.push({
 						name: `Invisible-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane + 0.1),
@@ -296,7 +296,7 @@ export class Parser {
 						id: note.id,
 						slideId: slide.id
 					});
-				} else if (note.type === NoteType.SlideVisible) {
+				} else if (note.type === PJSKConst.NoteType.SlideVisible) {
 					this.renderObjects.visibleNodes.push({
 						name: `Visible-${ note.id }`,
 						x: this.editor.calculator.getLaneX(note.lane),

@@ -19,6 +19,7 @@ export class Renderer {
 	public background: PIXI.Graphics;
 	public app: PIXI.Application;
 	private currentTimeLine: PIXI.Graphics;
+	private destroyed = false;
 	public readonly cursor: Cursor;
 
 	constructor(private editor: Editor) {
@@ -52,6 +53,16 @@ export class Renderer {
 		this.initLaneContainer();
 	}
 
+	destroy(): void {
+		this.destroyed = true;
+		this.destroyContainers();
+		this.app.destroy(true, {
+			children: true,
+			texture: true,
+			baseTexture: true
+		});
+	}
+
 	initLaneContainer(): void {
 		this.containers.lane = new PIXI.Container();
 		this.containers.lane.name = 'Lane';
@@ -68,6 +79,7 @@ export class Renderer {
 	}
 
 	render(): void {
+		if (this.destroyed) return;
 		this.destroyContainers();
 		this.initContainers();
 		this.renderBeatLines();
@@ -80,7 +92,6 @@ export class Renderer {
 		this.renderSelectionBox();
 		this.updateCurrentTimeLine();
 	}
-
 
 	renderOnce(): void {
 		this.renderBackground();
@@ -313,6 +324,7 @@ export class Renderer {
 	}
 
 	updateCursorPosition(beat: Fraction, lane: number): void {
+		if (this.destroyed) return;
 		const height = this.editor.calculator.getHeightByBeat(beat, this.editor.timeLineManager.prime);
 		if (height > this.editor.const.maxHeight - this.editor.const.spaceY || lane < 0 || lane > 11) {
 			this.cursor.visible = false;
@@ -324,7 +336,7 @@ export class Renderer {
 	}
 
 	updateCurrentTimeLine(): void {
-		if (!this.currentTimeLine) return;
+		if (!this.currentTimeLine || this.destroyed) return;
 		const height = this.editor.calculator.getHeightByTime(this.editor.audioManager.currentTime);
 		const visible = height >= this.editor.scrollController.scrollBottom && height <= this.editor.scrollController.scrollBottom + this.editor.const.height;
 		this.currentTimeLine.visible = visible;

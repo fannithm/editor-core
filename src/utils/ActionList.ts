@@ -1,6 +1,6 @@
 export default class ActionList {
 	private maxRecords: number;
-	private list: IEditorSelectAction[]
+	private list: IEditorSelectAction[];
 
 	constructor(maxRecords: number) {
 		this.maxRecords = maxRecords;
@@ -23,4 +23,4 @@ export interface IEditorAction<Type, Param> {
 
 export type IEditorSelectAction = IEditorAction<EditorActionName.Select, {
 	from: EditorActionName
-}>
+}>;

@@ -18,6 +18,7 @@ export class ScrollController {
 	scrollTo(height: number): void {
 		if (this.editor.audioManager.follow) {
 			this.editor.audioManager.currentTime = height / this.editor.const.heightPerSecond;
+			this.editor.event.dispatchAudioTimeUpdateEvent();
 		}
 		this.scrollBottom = height;
 	}

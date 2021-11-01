@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { IMap, MapBeat } from '@fannithm/const/dist/pjsk';
+import { PJSK as PJSKConst } from '@fannithm/const';
 import { Fraction } from '@fannithm/utils';
 import { EventHandler } from './EventHandler';
 import { AudioManager } from './AudioManager';
@@ -32,7 +32,7 @@ import { IEditorTheme, ResourceManager } from './ResourceManager';
  * ```
  */
 export class Editor {
-	private _map: IMap;
+	private _map: PJSKConst.IMap;
 	private _beatSlice = 1;
 	public event: EventEmitter;
 	public handler: EventHandler;
@@ -73,17 +73,14 @@ export class Editor {
 	}
 
 	destroy(): void {
+		this.handler.removeAll();
 		this.event.dispatchDestroyEvent();
-		this.renderer.destroyContainers();
-		this.renderer.app.destroy(true, {
-			children: true,
-			texture: true,
-			baseTexture: true
-		});
 		this.audioManager.destroy();
+		this.renderer.destroy();
+		PIXI.utils.clearTextureCache();
 	}
 
-	set map(map: IMap) {
+	set map(map: PJSKConst.IMap) {
 		this._map = map;
 		if (!this.timeLineManager.visible.some(v => this.map.timelines.map(t => t.id).includes(v))) {
 			this.timeLineManager.visible = [this.map.timelines[0].id];
@@ -91,7 +88,7 @@ export class Editor {
 		this.renderer.parseAndRender();
 	}
 
-	get map(): IMap {
+	get map(): PJSKConst.IMap {
 		return this._map;
 	}
 
@@ -104,7 +101,7 @@ export class Editor {
 		return this._beatSlice;
 	}
 
-	fraction(beat: MapBeat): Fraction {
+	fraction(beat: PJSKConst.MapBeat): Fraction {
 		return new Fraction([1, ...beat]);
 	}
 }

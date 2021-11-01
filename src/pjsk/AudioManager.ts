@@ -21,18 +21,21 @@ export class AudioManager {
 		return this.audioContext.decodeAudioData(buffer);
 	}
 
-	loadAudio(file: File): void {
-		this.audio = new Audio();
-		this.audioContext = new AudioContext();
-		this.audio.addEventListener('loadeddata', () => {
-			this.editor.renderer.parseAndRender();
+	loadAudio(file: File): Promise<void> {
+		return new Promise<void>(resolve =>{
+			this.audio = new Audio();
+			this.audioContext = new AudioContext();
+			this.audio.addEventListener('loadeddata', () => {
+				this.editor.renderer.parseAndRender();
+				resolve();
+			});
+			this.audio.addEventListener('ended', () => {
+				this._playing = false;
+			});
+			this.audio.src = URL.createObjectURL(file);
+			this.audioSource = this.audioContext.createMediaElementSource(this.audio);
+			this.audioSource.connect(this.audioContext.destination);
 		});
-		this.audio.addEventListener('ended', () => {
-			this._playing = false;
-		});
-		this.audio.src = URL.createObjectURL(file);
-		this.audioSource = this.audioContext.createMediaElementSource(this.audio);
-		this.audioSource.connect(this.audioContext.destination);
 	}
 
 	async play(): Promise<void> {

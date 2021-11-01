@@ -1,20 +1,22 @@
 import ts from 'rollup-plugin-ts';
 import filesize from 'rollup-plugin-filesize';
 
+const external = ['pixi.js', '@fannithm/const', '@fannithm/utils', 'uuid', 'bezier-easing'];
+
 export default [
 	{
 		input: 'src/index.ts',
 		output: [
 			{
-				file: 'dist/fannithm-editor-core.mjs',
+				file: 'dist/fannithm-editor-core.cjs',
 				format: 'cjs'
 			},
 			{
-				file: 'dist/fannithm-editor-core.cjs',
+				file: 'dist/fannithm-editor-core.mjs',
 				format: 'es'
 			}
 		],
-		external: ['pixi.js', '@fannithm/const/dist/pjsk', '@fannithm/utils', 'uuid', 'bezier-easing'],
+		external,
 		plugins: [
 			ts(),
 			filesize()
@@ -25,7 +27,7 @@ export default [
 		output: {
 			file: 'index.d.ts'
 		},
-		external: ['pixi.js', '@fannithm/const/dist/pjsk', '@fannithm/utils', 'uuid', 'bezier-easing'],
+		external,
 		plugins: [
 			ts({
 				tsconfig: config => ({
