@@ -31,7 +31,7 @@ export default {
 				before: [
 					{
 						tag: 'script',
-						src: `https://unpkg.com/pixi.js@${ pkg.devDependencies['pixi.js'] }/dist/browser/pixi.js`
+						src: `https://unpkg.com/pixi.js@${ pkg.dependencies['pixi.js'] }/dist/browser/pixi.js`
 					}
 				]
 			}
@@ -55,7 +55,7 @@ export default {
 		typescript(),
 		serve({
 			contentBase: ['.temp', 'public'],
-			host: '0.0.0.0',
+			host: 'localhost',
 			port: 8081
 		}),
 		livereload()

@@ -7,6 +7,7 @@ export class Calculator {
 	}
 
 	getTimeByBeat(beat: Fraction, timeline: string): number {
+		if (!this.map) return 0;
 		let time = 0;
 		const bpms = this.map.bpms.filter(v => v.timeline === timeline);
 		for (let i = 0; i < bpms.length; i++) {

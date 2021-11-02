@@ -22,7 +22,7 @@ export class AudioManager {
 	}
 
 	loadAudio(file: File): Promise<void> {
-		return new Promise<void>(resolve =>{
+		return new Promise<void>(resolve => {
 			this.audio = new Audio();
 			this.audioContext = new AudioContext();
 			this.audio.addEventListener('loadeddata', () => {
@@ -48,6 +48,8 @@ export class AudioManager {
 	stop(): void {
 		this.pause();
 		this.currentTime = 0;
+		if (this.follow) this.editor.scrollController.scrollBottom = 0;
+		this._playing = false;
 		this.editor.renderer.updateCurrentTimeLine();
 	}
 
