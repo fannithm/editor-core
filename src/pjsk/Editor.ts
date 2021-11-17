@@ -61,7 +61,7 @@ export class Editor {
 		this.scrollController = new ScrollController(this);
 		this.audioManager = new AudioManager(this);
 		this.renderer = new Renderer(this);
-		this.timeLineManager = new TimeLineManager();
+		this.timeLineManager = new TimeLineManager(this);
 		this.selectionManager = new SelectionManager(this);
 		this.cursorManager = new CursorManager(this);
 	}

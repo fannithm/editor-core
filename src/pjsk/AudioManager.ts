@@ -69,7 +69,10 @@ export class AudioManager {
 	}
 
 	public set currentTime(time: number) {
-		if (this.audio) this.audio.currentTime = time;
+		if (this.audio) {
+			this.audio.currentTime = time;
+			this.editor.event.dispatchAudioTimeUpdateEvent();
+		}
 	}
 
 	public get totalTime(): number {

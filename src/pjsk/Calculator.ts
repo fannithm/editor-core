@@ -1,15 +1,21 @@
 import { PJSK as PJSKConst } from '@fannithm/const';
 import { Fraction } from '@fannithm/utils';
 import { Editor } from './Editor';
+import { v4 } from 'uuid';
 
 export class Calculator {
 	constructor(private editor: Editor) {
 	}
 
 	getTimeByBeat(beat: Fraction, timeline: string): number {
-		if (!this.map) return 0;
 		let time = 0;
-		const bpms = this.map.bpms.filter(v => v.timeline === timeline);
+		let bpms = this.map?.bpms.filter(v => v.timeline === timeline);
+		if (!bpms || bpms.length === 0) bpms = [{
+			beat: [0, 0, 1],
+			id: v4(),
+			bpm: 120,
+			timeline
+		}];
 		for (let i = 0; i < bpms.length; i++) {
 			const bpm = bpms[i];
 			const BPMBeat = this.editor.fraction(bpm.beat);
