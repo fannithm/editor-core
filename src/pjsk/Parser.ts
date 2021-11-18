@@ -33,7 +33,6 @@ export class Parser {
 	}
 
 	parse(): void {
-		if (this.map?.bpms.length === 0) return;
 		this.initRenderObjects();
 		this.addLanes();
 		if (this.map?.timelines.length > 0 && this.map?.bpms.length > 0) {
@@ -117,7 +116,7 @@ export class Parser {
 		}
 	}
 
-	private formatTime(time: number): string {
+	public formatTime(time: number): string {
 		return `${ Math.floor(time / 60).toString().padStart(2, '0') }:${ (time % 60).toFixed(3).padStart(6, '0') }`;
 	}
 

@@ -68,8 +68,8 @@ export class Editor {
 
 	start(): void {
 		this.handler.listen();
-		this.renderer.parseAndRender();
 		this.renderer.renderOnce();
+		this.renderer.parseAndRender();
 	}
 
 	destroy(): void {

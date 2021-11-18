@@ -25,4 +25,13 @@ export class TimeLineManager {
 		if (visible.length === 1 || (visible.length > 1 && !visible.includes(this.prime))) this.prime = visible[0];
 		this.editor.renderer.parseAndRender();
 	}
+
+	public deleteTimeline(id: string): void {
+		const index = this.editor.map.timelines.findIndex(v => v.id === id);
+		if (index === -1) return;
+		this.editor.map.timelines.splice(index, 1);
+		this.editor.map.bpms = this.editor.map.bpms.filter(v => v.timeline === id);
+		this.editor.map.notes = this.editor.map.notes.filter(v => v.timeline === id);
+		this.editor.map.slides = this.editor.map.slides.filter(v => v.timeline === id);
+	}
 }

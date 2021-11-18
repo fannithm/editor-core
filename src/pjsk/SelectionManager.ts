@@ -29,6 +29,10 @@ export class SelectionManager {
 		this.selection.slide = {};
 	}
 
+	isEmpty(selection: IEditorSelection = this.selection): boolean {
+		return selection.single.length === 0 && Object.keys(selection).length === 0;
+	}
+
 	private isUniqueArrayEqual<T>(a: T[], b: T[]): boolean {
 		return a.length === b.length && a.every(v => b.includes(v));
 	}
