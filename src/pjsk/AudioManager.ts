@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { Editor } from './Editor';
+import { EventType } from './EventEmitter';
 
 export class AudioManager {
 	private _totalTime = 10;
@@ -9,6 +10,7 @@ export class AudioManager {
 	private audioSource: MediaElementAudioSourceNode;
 	playTicker: PIXI.Ticker;
 	private _playing = false;
+	private _playBackRate = 1;
 
 	constructor(private editor: Editor) {
 		this.playTicker = new PIXI.Ticker();
@@ -23,6 +25,7 @@ export class AudioManager {
 
 	loadAudio(file: File): Promise<void> {
 		return new Promise<void>(resolve => {
+			if (this.audio) this._playBackRate = this.audio.playbackRate;
 			this.audio = new Audio();
 			this.audioContext = new AudioContext();
 			this.audio.addEventListener('loadeddata', () => {
@@ -31,8 +34,10 @@ export class AudioManager {
 			});
 			this.audio.addEventListener('ended', () => {
 				this._playing = false;
+				this.editor.event.emit(EventType.AudioEnded);
 			});
 			this.audio.src = URL.createObjectURL(file);
+			this.audio.playbackRate = this._playBackRate;
 			this.audioSource = this.audioContext.createMediaElementSource(this.audio);
 			this.audioSource.connect(this.audioContext.destination);
 		});
@@ -95,5 +100,14 @@ export class AudioManager {
 
 	get playing(): boolean {
 		return this._playing;
+	}
+
+	set playBackRate(value: number) {
+		this._playBackRate = value;
+		if (this.audio) this.audio.playbackRate = value;
+	}
+
+	get playBackRate(): number {
+		return this.audio?.playbackRate || this._playBackRate;
 	}
 }

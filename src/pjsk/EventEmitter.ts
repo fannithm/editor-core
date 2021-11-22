@@ -71,16 +71,19 @@ export enum EventType {
 	 */
 	AudioTimeUpdate = 'audioTimeUpdate',
 	/**
+     * Emitted when audio is ended
+     * @event audioEnded
+     */
+	AudioEnded = 'audioEnded',
+	/**
 	 * Emitted when cursor is moved
 	 * @event cursorMove
 	 */
 	CursorMove = 'cursorMove',
-
 	/**
 	 * @event resourceLoadProgress
 	 */
 	ResourceLoadProgress = 'resourceLoadProgress',
-
 	/**
 	 * @event resourceLoadError
 	 */

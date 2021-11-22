@@ -83,6 +83,7 @@ export class EventHandler {
 	}
 
 	private mouseWheelHandler(event: WheelEvent): void {
+		if (event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) return;
 		const scrollBottom = Math.min(this.editor.const.maxHeight - this.editor.const.height, Math.max(0, this.editor.scrollController.scrollBottom - event.deltaY / this.editor.const.resolution));
 		this.editor.scrollController.scrollTo(scrollBottom);
 	}
